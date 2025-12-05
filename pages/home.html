@@ -1,0 +1,44 @@
+<div class="home-page">
+    <div class="welcome-section">
+        <h1>Welcome to Project Tracker</h1>
+        <p>Organize your projects, ideas, and events all in one place.</p>
+    </div>
+
+    <div class="dashboard-stats" id="dashboard-stats">
+        <div class="stat-card">
+            <h3>0</h3>
+            <p>Total Projects</p>
+        </div>
+        <div class="stat-card">
+            <h3>0</h3>
+            <p>Active Ideas</p>
+        </div>
+        <div class="stat-card">
+            <h3>0</h3>
+            <p>Completed Tasks</p>
+        </div>
+        <div class="stat-card">
+            <h3>0</h3>
+            <p>Overdue Tasks</p>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+            <button class="btn" onclick="window.navigateToPage('create-project')">
+                Create New Project
+            </button>
+            <button class="btn btn-secondary" onclick="window.navigateToPage('all-projects')">
+                View All Projects
+            </button>
+        </div>
+    </div>
+
+    <div class="recent-activity">
+        <h2>Recent Activity</h2>
+        <div class="activity-list" id="recent-activity">
+            <p>No recent activity found.</p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,88 @@
+<div class="project-planner-form">
+    <div class="template-header">
+        <h2 class="template-title">Project Planner</h2>
+        <button class="back-btn" onclick="window.showTemplateSelection()">
+            ← Back to Templates
+        </button>
+    </div>
+
+    <form id="project-planner-form" class="planner-form">
+        <div class="form-section">
+            <h3>Project Details</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="project-topic" class="form-label">Topic *</label>
+                    <input type="text" id="project-topic" name="topic" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="project-due-date" class="form-label">Plan Due Date *</label>
+                    <input type="date" id="project-due-date" name="planDueDate" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="project-name" class="form-label">Project Name *</label>
+                    <input type="text" id="project-name" name="name" class="form-input" required>
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="project-keywords" class="form-label">Keywords</label>
+                    <div class="keywords-input">
+                        <input type="text" id="project-keywords" placeholder="Enter keyword and press Enter">
+                        <button type="button" class="btn btn-secondary" onclick="addKeyword()">Add</button>
+                    </div>
+                    <div class="keyword-tags" id="project-keyword-tags"></div>
+                    <input type="hidden" name="keywords" id="project-keywords-hidden">
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="project-description" class="form-label">General Description</label>
+                    <textarea id="project-description" name="generalDescription" class="form-textarea" rows="4"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Linked Plans</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="linked-idea" class="form-label">Linked Idea</label>
+                    <select id="linked-idea" name="ideaId" class="form-select">
+                        <option value="">Select an idea...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="linked-event" class="form-label">Linked Event</label>
+                    <select id="linked-event" name="eventId" class="form-select">
+                        <option value="">Select an event...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Goals & Objectives</h3>
+            <div class="form-grid">
+                <div class="form-group form-row">
+                    <label for="project-goal" class="form-label">Goal</label>
+                    <textarea id="project-goal" name="goal" class="form-textarea" rows="3"></textarea>
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="project-objective" class="form-label">Objective</label>
+                    <textarea id="project-objective" name="objective" class="form-textarea" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="window.showTemplateSelection()">
+                Cancel
+            </button>
+            <button type="submit" class="btn">
+                Save Project
+            </button>
+        </div>
+    </form>
+</div>

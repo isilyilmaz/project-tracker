@@ -1,0 +1,45 @@
+<div class="all-projects-page">
+    <div class="page-header">
+        <h1>All Projects</h1>
+        <p>Manage and view all your projects in one place</p>
+    </div>
+
+    <div class="projects-filter">
+        <div class="filter-controls">
+            <input type="text" id="search-projects" class="form-input" placeholder="Search projects...">
+            <select id="filter-status" class="form-select">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="on-hold">On Hold</option>
+            </select>
+            <button class="btn" onclick="window.navigateToPage('create-project')">
+                Add New Project
+            </button>
+        </div>
+    </div>
+
+    <div class="projects-container">
+        <div class="projects-list" id="projects-list">
+            <p>Loading projects...</p>
+        </div>
+    </div>
+
+    <div class="projects-stats">
+        <h3>Project Statistics</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number" id="total-projects">0</span>
+                <span class="stat-label">Total Projects</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="active-projects">0</span>
+                <span class="stat-label">Active</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="completed-projects">0</span>
+                <span class="stat-label">Completed</span>
+            </div>
+        </div>
+    </div>
+</div>

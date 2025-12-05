@@ -1,0 +1,90 @@
+<div class="idea-planner-form">
+    <div class="template-header">
+        <h2 class="template-title">Idea Planner</h2>
+        <button class="back-btn" onclick="window.showTemplateSelection()">
+            ← Back to Templates
+        </button>
+    </div>
+
+    <form id="idea-planner-form" class="planner-form">
+        <div class="form-section">
+            <h3>Idea Details</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="idea-topic" class="form-label">Topic *</label>
+                    <input type="text" id="idea-topic" name="topic" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="idea-due-date" class="form-label">Plan Due Date *</label>
+                    <input type="date" id="idea-due-date" name="planDueDate" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="idea-name" class="form-label">Idea Name *</label>
+                    <input type="text" id="idea-name" name="name" class="form-input" required>
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="idea-keywords" class="form-label">Keywords</label>
+                    <div class="keywords-input">
+                        <input type="text" id="idea-keywords" placeholder="Enter keyword and press Enter">
+                        <button type="button" class="btn btn-secondary" onclick="addIdeaKeyword()">Add</button>
+                    </div>
+                    <div class="keyword-tags" id="idea-keyword-tags"></div>
+                    <input type="hidden" name="keywords" id="idea-keywords-hidden">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Goals & Objectives</h3>
+            <div class="form-grid">
+                <div class="form-group form-row">
+                    <label for="idea-goals" class="form-label">Goals</label>
+                    <textarea id="idea-goals" name="goals" class="form-textarea" rows="3"></textarea>
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="idea-objectives" class="form-label">Objectives</label>
+                    <textarea id="idea-objectives" name="objectives" class="form-textarea" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Task Management</h3>
+            <div class="task-management">
+                <div class="task-controls">
+                    <button type="button" class="btn btn-secondary" onclick="window.taskGrid.addNewTask()">
+                        + Add Task
+                    </button>
+                </div>
+                
+                <div class="task-grid-container">
+                    <div class="task-grid" id="idea-task-grid">
+                        <div class="task-grid-header">
+                            <div class="grid-cell">Task Name</div>
+                            <div class="grid-cell">Due Date</div>
+                            <div class="grid-cell">Status</div>
+                            <div class="grid-cell">Notes</div>
+                            <div class="grid-cell">Actions</div>
+                        </div>
+                        <div class="task-grid-body" id="task-grid-body">
+                            <!-- Tasks will be dynamically added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="window.showTemplateSelection()">
+                Cancel
+            </button>
+            <button type="submit" class="btn">
+                Save Idea
+            </button>
+        </div>
+    </form>
+</div>

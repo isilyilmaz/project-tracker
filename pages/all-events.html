@@ -1,0 +1,61 @@
+<div class="all-events-page">
+    <div class="page-header">
+        <h1>All Events</h1>
+        <p>Manage and view all your scheduled events</p>
+    </div>
+
+    <div class="events-filter">
+        <div class="filter-controls">
+            <input type="text" id="search-events" class="form-input" placeholder="Search events...">
+            <select id="filter-event-status" class="form-select">
+                <option value="">All Status</option>
+                <option value="planning">Planning</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+            <select id="filter-event-type" class="form-select">
+                <option value="">All Types</option>
+                <option value="conference">Conference</option>
+                <option value="workshop">Workshop</option>
+                <option value="meeting">Meeting</option>
+                <option value="webinar">Webinar</option>
+                <option value="social">Social Event</option>
+                <option value="launch">Product Launch</option>
+                <option value="other">Other</option>
+            </select>
+            <button class="btn" onclick="window.navigateToPage('create-project'); setTimeout(() => { if(window.templateManager) window.templateManager.selectTemplate('event-planner'); }, 100)">
+                Add New Event
+            </button>
+        </div>
+    </div>
+
+    <div class="events-container">
+        <div class="events-list" id="events-list">
+            <p>Loading events...</p>
+        </div>
+    </div>
+
+    <div class="events-stats">
+        <h3>Events Statistics</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number" id="total-events">0</span>
+                <span class="stat-label">Total Events</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="upcoming-events">0</span>
+                <span class="stat-label">Upcoming</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="completed-events">0</span>
+                <span class="stat-label">Completed</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="planning-events">0</span>
+                <span class="stat-label">Planning</span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,119 @@
+<div class="event-planner-form">
+    <div class="template-header">
+        <h2 class="template-title">Event Planner</h2>
+        <button class="back-btn" onclick="window.showTemplateSelection()">
+            ← Back to Templates
+        </button>
+    </div>
+
+    <form id="event-planner-form" class="planner-form">
+        <div class="form-section">
+            <h3>Event Details</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="event-name" class="form-label">Event Name *</label>
+                    <input type="text" id="event-name" name="name" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="event-type" class="form-label">Event Type *</label>
+                    <select id="event-type" name="type" class="form-select" required>
+                        <option value="">Select event type...</option>
+                        <option value="conference">Conference</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="meeting">Meeting</option>
+                        <option value="webinar">Webinar</option>
+                        <option value="social">Social Event</option>
+                        <option value="launch">Product Launch</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="event-date" class="form-label">Event Date *</label>
+                    <input type="datetime-local" id="event-date" name="eventDate" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="event-duration" class="form-label">Duration (hours)</label>
+                    <input type="number" id="event-duration" name="duration" class="form-input" min="0.5" step="0.5">
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="event-location" class="form-label">Location</label>
+                    <input type="text" id="event-location" name="location" class="form-input" placeholder="Physical location or virtual platform">
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="event-description" class="form-label">Event Description</label>
+                    <textarea id="event-description" name="description" class="form-textarea" rows="4"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Attendees & Resources</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="expected-attendees" class="form-label">Expected Attendees</label>
+                    <input type="number" id="expected-attendees" name="expectedAttendees" class="form-input" min="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="event-budget" class="form-label">Budget ($)</label>
+                    <input type="number" id="event-budget" name="budget" class="form-input" min="0" step="0.01">
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="event-organizer" class="form-label">Organizer</label>
+                    <input type="text" id="event-organizer" name="organizer" class="form-input">
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="event-resources" class="form-label">Required Resources</label>
+                    <textarea id="event-resources" name="resources" class="form-textarea" rows="3" placeholder="Equipment, catering, AV setup, etc."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Schedule & Timeline</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="preparation-time" class="form-label">Preparation Time (days)</label>
+                    <input type="number" id="preparation-time" name="preparationTime" class="form-input" min="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="event-status" class="form-label">Status</label>
+                    <select id="event-status" name="status" class="form-select">
+                        <option value="planning">Planning</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="event-agenda" class="form-label">Event Agenda</label>
+                    <textarea id="event-agenda" name="agenda" class="form-textarea" rows="5" placeholder="Time-based agenda items..."></textarea>
+                </div>
+
+                <div class="form-group form-row">
+                    <label for="event-notes" class="form-label">Additional Notes</label>
+                    <textarea id="event-notes" name="notes" class="form-textarea" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="window.showTemplateSelection()">
+                Cancel
+            </button>
+            <button type="submit" class="btn">
+                Save Event
+            </button>
+        </div>
+    </form>
+</div>

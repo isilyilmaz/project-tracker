@@ -33,6 +33,7 @@ class TaskGrid {
             dueDate: '',
             doneStatus: 'pending',
             notes: '',
+            subtaskIds: [], // New schema field
             isNew: true
         };
 
@@ -79,9 +80,10 @@ class TaskGrid {
             task.dueDate = dueDateInput.value;
             task.doneStatus = statusSelect.value;
             task.notes = notesInput.value;
+            task.subtaskIds = task.subtaskIds || []; // Ensure subtaskIds array exists
             task.isNew = false;
 
-            // Save to localStorage through data manager
+            // Save to data manager (which will create JSON file)
             try {
                 if (task.isNew !== false) {
                     await window.dataManager.saveTask(task);

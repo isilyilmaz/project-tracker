@@ -239,11 +239,12 @@ class TemplateManager {
 
     async loadProjectDropdowns() {
         try {
-            // Load ideas for dropdown
+            // Load ideas for multi-select dropdown
             const ideas = await window.dataManager.getAllIdeas();
             const ideaSelect = document.getElementById('linked-idea');
             if (ideaSelect) {
-                ideaSelect.innerHTML = '<option value="">Select an idea...</option>';
+                ideaSelect.multiple = true;
+                ideaSelect.innerHTML = '';
                 ideas.forEach(idea => {
                     const option = document.createElement('option');
                     option.value = idea.id;
@@ -252,16 +253,31 @@ class TemplateManager {
                 });
             }
 
-            // Load events for dropdown
+            // Load events for multi-select dropdown
             const events = await window.dataManager.getAllEvents();
             const eventSelect = document.getElementById('linked-event');
             if (eventSelect) {
-                eventSelect.innerHTML = '<option value="">Select an event...</option>';
+                eventSelect.multiple = true;
+                eventSelect.innerHTML = '';
                 events.forEach(event => {
                     const option = document.createElement('option');
                     option.value = event.id;
                     option.textContent = event.name;
                     eventSelect.appendChild(option);
+                });
+            }
+
+            // Load tasks for multi-select dropdown
+            const tasks = await window.dataManager.getAllTasks();
+            const taskSelect = document.getElementById('linked-task');
+            if (taskSelect) {
+                taskSelect.multiple = true;
+                taskSelect.innerHTML = '';
+                tasks.forEach(task => {
+                    const option = document.createElement('option');
+                    option.value = task.id;
+                    option.textContent = task.name;
+                    taskSelect.appendChild(option);
                 });
             }
         } catch (error) {
@@ -274,19 +290,23 @@ class TemplateManager {
             const formData = new FormData(form);
             const isEditMode = window.currentEditMode === 'edit' && window.currentEditProject;
             
+            // Convert single selections to arrays for new schema
+            const selectedIdeaIds = this.getSelectedValues('linked-idea');
+            const selectedEventIds = this.getSelectedValues('linked-event'); 
+            const selectedTaskIds = this.getSelectedValues('linked-task');
+            
+            // Database schema: { id, topic, planDueDate, name, keywords[], ideaId[], eventId[], goal, objective, taskId[] }
             const projectData = {
                 id: isEditMode ? window.currentEditProject.id : window.idGenerator.generateId('proj'),
                 topic: formData.get('topic'),
                 planDueDate: formData.get('planDueDate'),
                 name: formData.get('name'),
                 keywords: JSON.parse(formData.get('keywords') || '[]'),
-                generalDescription: formData.get('generalDescription'),
-                ideaId: formData.get('ideaId') || null,
-                eventId: formData.get('eventId') || null,
+                ideaId: selectedIdeaIds,
+                eventId: selectedEventIds,
                 goal: formData.get('goal'),
                 objective: formData.get('objective'),
-                createdAt: isEditMode ? window.currentEditProject.createdAt : new Date().toISOString(),
-                updatedAt: isEditMode ? new Date().toISOString() : undefined
+                taskId: selectedTaskIds
             };
 
             if (isEditMode) {
@@ -323,6 +343,7 @@ class TemplateManager {
             const isEditMode = window.currentEditMode === 'edit' && window.currentEditIdea;
             const taskIds = window.taskGrid ? window.taskGrid.getAllTaskIds() : [];
             
+            // Database schema: { id, topic, planDueDate, name, keywords[], goals, objectives, taskIds[] }
             const ideaData = {
                 id: isEditMode ? window.currentEditIdea.id : window.idGenerator.generateId('idea'),
                 topic: formData.get('topic'),
@@ -331,9 +352,7 @@ class TemplateManager {
                 keywords: JSON.parse(formData.get('keywords') || '[]'),
                 goals: formData.get('goals'),
                 objectives: formData.get('objectives'),
-                taskIds: taskIds,
-                createdAt: isEditMode ? window.currentEditIdea.createdAt : new Date().toISOString(),
-                updatedAt: isEditMode ? new Date().toISOString() : undefined
+                taskIds: taskIds
             };
 
             if (isEditMode) {
@@ -369,6 +388,7 @@ class TemplateManager {
             const formData = new FormData(form);
             const isEditMode = window.currentEditMode === 'edit' && window.currentEditEvent;
             
+            // Database schema: { id, name, type, eventDate, duration, location, description, status }
             const eventData = {
                 id: isEditMode ? window.currentEditEvent.id : window.idGenerator.generateId('event'),
                 name: formData.get('name'),
@@ -377,16 +397,7 @@ class TemplateManager {
                 duration: formData.get('duration'),
                 location: formData.get('location'),
                 description: formData.get('description'),
-                expectedAttendees: formData.get('expectedAttendees'),
-                budget: formData.get('budget'),
-                organizer: formData.get('organizer'),
-                resources: formData.get('resources'),
-                preparationTime: formData.get('preparationTime'),
-                status: formData.get('status'),
-                agenda: formData.get('agenda'),
-                notes: formData.get('notes'),
-                createdAt: isEditMode ? window.currentEditEvent.createdAt : new Date().toISOString(),
-                updatedAt: isEditMode ? new Date().toISOString() : undefined
+                status: formData.get('status') || 'planning'
             };
 
             if (isEditMode) {
@@ -504,6 +515,17 @@ class TemplateManager {
             }
         });
 
+        // Populate array fields (ideaId, eventId, taskId)
+        if (project.ideaId) {
+            this.setSelectedValues('linked-idea', project.ideaId);
+        }
+        if (project.eventId) {
+            this.setSelectedValues('linked-event', project.eventId);
+        }
+        if (project.taskId) {
+            this.setSelectedValues('linked-task', project.taskId);
+        }
+
         // Populate keywords
         if (project.keywords && project.keywords.length > 0) {
             const keywordsContainer = document.getElementById('project-keyword-tags');
@@ -620,6 +642,7 @@ class TemplateManager {
     }
 
     populateEventForm(form, event) {
+        // Only populate fields that match the new simplified schema
         const fields = {
             'event-name': event.name,
             'event-type': event.type,
@@ -627,14 +650,7 @@ class TemplateManager {
             'event-duration': event.duration,
             'event-location': event.location,
             'event-description': event.description,
-            'expected-attendees': event.expectedAttendees,
-            'event-budget': event.budget,
-            'event-organizer': event.organizer,
-            'event-resources': event.resources,
-            'preparation-time': event.preparationTime,
-            'event-status': event.status,
-            'event-agenda': event.agenda,
-            'event-notes': event.notes
+            'event-status': event.status
         };
 
         Object.entries(fields).forEach(([fieldId, value]) => {
@@ -643,6 +659,34 @@ class TemplateManager {
                 field.value = value;
             }
         });
+    }
+
+    getSelectedValues(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return [];
+        
+        if (element.multiple) {
+            // Multi-select element
+            return Array.from(element.selectedOptions).map(option => option.value).filter(val => val);
+        } else {
+            // Single select element - return as array for consistency
+            return element.value ? [element.value] : [];
+        }
+    }
+
+    setSelectedValues(elementId, values) {
+        const element = document.getElementById(elementId);
+        if (!element || !Array.isArray(values)) return;
+        
+        if (element.multiple) {
+            // Multi-select element
+            Array.from(element.options).forEach(option => {
+                option.selected = values.includes(option.value);
+            });
+        } else {
+            // Single select element - use first value
+            element.value = values.length > 0 ? values[0] : '';
+        }
     }
 }
 

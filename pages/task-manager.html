@@ -1,0 +1,188 @@
+<div class="task-manager-container">
+    <div class="task-manager-header">
+        <div class="task-manager-title">
+            <h3>Task & Subtask Management</h3>
+            <p>Manage tasks and subtasks with lifecycle progression</p>
+        </div>
+        <div class="task-manager-actions">
+            <button class="btn btn-small" onclick="window.taskManager.toggleView()">
+                <span class="view-toggle-icon">⊞</span> Toggle View
+            </button>
+            <button class="btn btn-small btn-close" onclick="window.taskManager.hide()">
+                ✕ Close
+            </button>
+        </div>
+    </div>
+
+    <div class="task-manager-filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="tm-search">Search:</label>
+                <input type="text" id="tm-search" class="form-input-small" placeholder="Search tasks/subtasks...">
+            </div>
+            
+            <div class="filter-group">
+                <label for="tm-stage-filter">Stage:</label>
+                <select id="tm-stage-filter" class="form-select-small">
+                    <option value="">All Stages</option>
+                    <option value="Analyze">🔍 Analyze</option>
+                    <option value="Development">⚙️ Development</option>
+                    <option value="Test">🧪 Test</option>
+                    <option value="Production">🚀 Production</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="tm-assignee-filter">Assignee:</label>
+                <select id="tm-assignee-filter" class="form-select-small">
+                    <option value="">All Assignees</option>
+                    <option value="unassigned">Unassigned</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="tm-task-filter">Task Status:</label>
+                <select id="tm-task-filter" class="form-select-small">
+                    <option value="">All Tasks</option>
+                    <option value="complete">Complete</option>
+                    <option value="pending">Pending</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="incomplete">Incomplete</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="task-manager-content">
+        <div class="view-toggle-container">
+            <div class="view-mode-selector">
+                <button class="view-mode-btn active" data-view="grid" onclick="window.taskManager.setView('grid')">
+                    <span class="view-icon">⊞</span> Grid View
+                </button>
+                <button class="view-mode-btn" data-view="list" onclick="window.taskManager.setView('list')">
+                    <span class="view-icon">☰</span> List View
+                </button>
+            </div>
+            
+            <div class="content-stats">
+                <span id="tm-total-count">0 items</span>
+                <span class="separator">•</span>
+                <span id="tm-filtered-count">0 shown</span>
+            </div>
+        </div>
+
+        <!-- Grid View -->
+        <div class="task-grid-view" id="task-grid-view">
+            <div class="tasks-section">
+                <div class="section-header">
+                    <h4>📋 Tasks</h4>
+                    <div class="section-actions">
+                        <button class="btn-icon" onclick="window.taskManager.refreshTasks()" title="Refresh">
+                            🔄
+                        </button>
+                    </div>
+                </div>
+                <div class="tasks-grid" id="tasks-grid">
+                    <div class="loading-placeholder">Loading tasks...</div>
+                </div>
+            </div>
+
+            <div class="subtasks-section">
+                <div class="section-header">
+                    <h4>🔧 Subtasks</h4>
+                    <div class="section-actions">
+                        <button class="btn-small" onclick="window.taskManager.showCreateSubtaskModal()" title="Add Subtask">
+                            + Add Subtask
+                        </button>
+                    </div>
+                </div>
+                <div class="subtasks-grid" id="subtasks-grid">
+                    <div class="loading-placeholder">Loading subtasks...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- List View -->
+        <div class="task-list-view" id="task-list-view" style="display: none;">
+            <div class="task-list-container">
+                <div class="task-list-header">
+                    <div class="list-col-name">Name</div>
+                    <div class="list-col-type">Type</div>
+                    <div class="list-col-stage">Stage</div>
+                    <div class="list-col-assignee">Assignee</div>
+                    <div class="list-col-due">Due Date</div>
+                    <div class="list-col-actions">Actions</div>
+                </div>
+                <div class="task-list-body" id="task-list-body">
+                    <div class="loading-placeholder">Loading tasks...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Summary -->
+        <div class="task-manager-stats">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="tm-tasks-total">0</span>
+                        <span class="stat-label">Total Tasks</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🔧</div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="tm-subtasks-total">0</span>
+                        <span class="stat-label">Total Subtasks</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🔍</div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="tm-analyze-count">0</span>
+                        <span class="stat-label">Analyze</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">⚙️</div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="tm-development-count">0</span>
+                        <span class="stat-label">Development</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🧪</div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="tm-test-count">0</span>
+                        <span class="stat-label">Test</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🚀</div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="tm-production-count">0</span>
+                        <span class="stat-label">Production</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inline Edit Container -->
+    <div class="inline-edit-container" id="inline-edit-container" style="display: none;">
+        <div class="inline-edit-header">
+            <h4>Edit Subtask</h4>
+            <button class="btn-icon btn-close-edit" onclick="window.taskManager.hideInlineEdit()">
+                ✕
+            </button>
+        </div>
+        <div class="inline-edit-content" id="inline-edit-content">
+            <!-- Subtask edit form will be loaded here -->
+        </div>
+    </div>
+</div>

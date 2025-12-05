@@ -184,3 +184,227 @@ body {
         padding: 1rem;
     }
 }
+
+/* Additional utility styles */
+.form-help {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    display: block;
+    line-height: 1.3;
+}
+
+.form-select[multiple] {
+    min-height: 100px;
+    padding: 0.5rem;
+}
+
+.form-select[multiple] option {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    margin-bottom: 1px;
+}
+
+.form-select[multiple] option:checked {
+    background: linear-gradient(0deg, var(--wilderness-teal) 0%, var(--wilderness-orange) 100%);
+    color: white;
+}
+
+/* JSON Update Modal Styles */
+.json-update-content,
+.full-json-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.json-update-header,
+.full-json-header {
+    background: linear-gradient(135deg, var(--wilderness-teal), var(--wilderness-orange));
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.json-update-header h3,
+.full-json-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.close-instructions {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.close-instructions:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.json-update-body,
+.full-json-body {
+    padding: 2rem;
+}
+
+.update-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.step-number {
+    background: var(--wilderness-teal);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.step-content strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--wilderness-dark);
+}
+
+.step-content p {
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+.step-content code {
+    background: var(--bg-secondary);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: var(--wilderness-dark);
+}
+
+.json-preview {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+    border: 1px solid var(--border);
+}
+
+.json-preview h4 {
+    margin: 0 0 1rem 0;
+    color: var(--wilderness-dark);
+    font-size: 1rem;
+}
+
+.json-preview-text {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    overflow-x: auto;
+    margin: 0;
+    border: none;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.json-update-actions {
+    padding: 1rem 2rem 2rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    border-top: 1px solid var(--border);
+}
+
+.json-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.full-json-textarea {
+    width: 100%;
+    height: 400px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #f8f9fa;
+    resize: vertical;
+    overflow: auto;
+}
+
+.full-json-textarea:focus {
+    outline: none;
+    border-color: var(--wilderness-teal);
+    box-shadow: 0 0 0 2px rgba(65, 168, 191, 0.2);
+}
+
+/* Button styles for modals */
+.json-update-actions .btn,
+.json-actions .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-primary {
+    background: var(--wilderness-teal);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--wilderness-orange);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--text-secondary);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: var(--wilderness-brown);
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #138496;
+}

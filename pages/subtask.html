@@ -1,0 +1,174 @@
+<div class="subtask-edit-form">
+    <form id="subtask-edit-form" class="subtask-form">
+        <div class="subtask-edit-header">
+            <div class="subtask-info-display">
+                <div class="subtask-current-stage" id="current-stage-display">
+                    <span class="stage-icon" id="stage-icon">🔍</span>
+                    <span class="stage-name" id="stage-name">Analyze</span>
+                </div>
+                <div class="subtask-id-display">
+                    ID: <span id="subtask-id-display">--</span>
+                </div>
+            </div>
+            <div class="subtask-actions-header">
+                <button type="button" class="btn-stage-advance" id="advance-stage-btn" onclick="window.taskManager.advanceSubtaskStage()">
+                    <span id="advance-text">Advance to Development</span> →
+                </button>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group form-group-wide">
+                <label for="subtask-name-edit">Subtask Name *</label>
+                <input type="text" id="subtask-name-edit" name="name" class="form-input" required placeholder="Enter subtask name">
+                <div class="field-validation" id="name-validation"></div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="subtask-assignee-edit">Assignee</label>
+                <div class="assignee-input-container">
+                    <input type="text" id="subtask-assignee-edit" name="assignee" class="form-input" placeholder="Enter assignee name">
+                    <div class="assignee-suggestions" id="assignee-suggestions"></div>
+                </div>
+                <div class="field-help">Leave empty for unassigned</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="subtask-due-edit">Due Date</label>
+                <input type="date" id="subtask-due-edit" name="dueDate" class="form-input">
+                <div class="field-help">Optional due date</div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group form-group-wide">
+                <label for="subtask-notes-edit">Notes & Description</label>
+                <textarea id="subtask-notes-edit" name="notes" class="form-textarea" rows="3" placeholder="Add any notes or detailed description..."></textarea>
+                <div class="field-help">Optional additional information</div>
+            </div>
+        </div>
+
+        <!-- Stage Progression Timeline -->
+        <div class="stage-progression-section">
+            <h5>Stage Progression</h5>
+            <div class="stage-timeline-edit" id="stage-timeline-edit">
+                <div class="timeline-stage" data-stage="Analyze">
+                    <div class="timeline-dot">🔍</div>
+                    <div class="timeline-label">Analyze</div>
+                    <div class="timeline-description">Research & Planning</div>
+                </div>
+                <div class="timeline-connector"></div>
+                
+                <div class="timeline-stage" data-stage="Development">
+                    <div class="timeline-dot">⚙️</div>
+                    <div class="timeline-label">Development</div>
+                    <div class="timeline-description">Implementation</div>
+                </div>
+                <div class="timeline-connector"></div>
+                
+                <div class="timeline-stage" data-stage="Test">
+                    <div class="timeline-dot">🧪</div>
+                    <div class="timeline-label">Test</div>
+                    <div class="timeline-description">Testing & Validation</div>
+                </div>
+                <div class="timeline-connector"></div>
+                
+                <div class="timeline-stage" data-stage="Production">
+                    <div class="timeline-dot">🚀</div>
+                    <div class="timeline-label">Production</div>
+                    <div class="timeline-description">Final Deployment</div>
+                </div>
+            </div>
+            <div class="progression-rules">
+                <div class="rule-item">
+                    <span class="rule-icon">⚠️</span>
+                    <span class="rule-text">Subtasks can only move forward through stages</span>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-icon">🔒</span>
+                    <span class="rule-text">Once advanced, cannot return to previous stages</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parent Task Information -->
+        <div class="parent-task-section">
+            <h5>Parent Task</h5>
+            <div class="parent-task-info" id="parent-task-info">
+                <div class="parent-task-name">
+                    📋 <span id="parent-task-name">Loading...</span>
+                </div>
+                <div class="parent-task-status">
+                    Status: <span id="parent-task-status">--</span>
+                </div>
+                <div class="parent-task-due">
+                    Due: <span id="parent-task-due">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Trail -->
+        <div class="audit-section">
+            <h5>Activity History</h5>
+            <div class="audit-trail" id="audit-trail">
+                <div class="audit-item">
+                    <div class="audit-date" id="created-date">Created: --</div>
+                    <div class="audit-action">Subtask created in Analyze stage</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <div class="action-buttons-left">
+                <button type="button" class="btn btn-secondary" onclick="window.taskManager.hideInlineEdit()">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-danger" onclick="window.taskManager.deleteCurrentSubtask()" id="delete-subtask-btn">
+                    🗑️ Delete
+                </button>
+            </div>
+            <div class="action-buttons-right">
+                <button type="button" class="btn btn-info" onclick="window.taskManager.resetForm()" id="reset-form-btn">
+                    Reset
+                </button>
+                <button type="submit" class="btn btn-primary" id="save-subtask-btn">
+                    💾 Save Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- Validation Messages -->
+        <div class="form-messages" id="form-messages"></div>
+    </form>
+</div>
+
+<!-- Quick Actions Panel -->
+<div class="quick-actions-panel">
+    <div class="quick-actions-header">
+        <h6>Quick Actions</h6>
+    </div>
+    <div class="quick-actions-grid">
+        <button type="button" class="quick-action-btn" onclick="window.taskManager.duplicateSubtask()" title="Duplicate this subtask">
+            <span class="action-icon">📋</span>
+            <span class="action-label">Duplicate</span>
+        </button>
+        
+        <button type="button" class="quick-action-btn" onclick="window.taskManager.moveToTask()" title="Move to different task">
+            <span class="action-icon">📁</span>
+            <span class="action-label">Move</span>
+        </button>
+        
+        <button type="button" class="quick-action-btn" onclick="window.taskManager.addRelatedSubtask()" title="Add related subtask">
+            <span class="action-icon">➕</span>
+            <span class="action-label">Add Related</span>
+        </button>
+        
+        <button type="button" class="quick-action-btn" onclick="window.taskManager.exportSubtask()" title="Export subtask details">
+            <span class="action-icon">📤</span>
+            <span class="action-label">Export</span>
+        </button>
+    </div>
+</div>

@@ -9,6 +9,7 @@
     <form id="project-planner-form" class="planner-form">
         <div class="form-section">
             <h3>Project Details</h3>
+            <small class="form-help">Database Schema: { id, topic, planDueDate, name, keywords[], ideaId[], eventId[], goal, objective, taskId[] }</small>
             <div class="form-grid">
                 <div class="form-group">
                     <label for="project-topic" class="form-label">Topic *</label>
@@ -46,17 +47,27 @@
             <h3>Linked Plans</h3>
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="linked-idea" class="form-label">Linked Idea</label>
-                    <select id="linked-idea" name="ideaId" class="form-select">
-                        <option value="">Select an idea...</option>
+                    <label for="linked-idea" class="form-label">Linked Ideas</label>
+                    <select id="linked-idea" name="ideaId" class="form-select" multiple size="4">
+                        <!-- Options will be loaded dynamically -->
                     </select>
+                    <small class="form-help">Hold Ctrl/Cmd to select multiple ideas</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="linked-event" class="form-label">Linked Event</label>
-                    <select id="linked-event" name="eventId" class="form-select">
-                        <option value="">Select an event...</option>
+                    <label for="linked-event" class="form-label">Linked Events</label>
+                    <select id="linked-event" name="eventId" class="form-select" multiple size="4">
+                        <!-- Options will be loaded dynamically -->
                     </select>
+                    <small class="form-help">Hold Ctrl/Cmd to select multiple events</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="linked-task" class="form-label">Direct Tasks</label>
+                    <select id="linked-task" name="taskId" class="form-select" multiple size="4">
+                        <!-- Options will be loaded dynamically -->
+                    </select>
+                    <small class="form-help">Hold Ctrl/Cmd to select multiple tasks</small>
                 </div>
             </div>
         </div>

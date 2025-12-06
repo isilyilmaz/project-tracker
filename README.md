@@ -1,6 +1,6 @@
 # Project Tracker
 
-A comprehensive project tracking application with strict JSON database schema enforcement that directly updates structured JSON files in the data/ folder.
+A comprehensive project tracking application that directly updates JSON files using modern browser File System Access API.
 
 ## Features
 
@@ -9,59 +9,52 @@ A comprehensive project tracking application with strict JSON database schema en
 - **Events**: Schedule and manage events with location and status tracking
 - **Tasks**: Create tasks with due dates, status tracking, and subtasks
 - **Subtasks**: Forward-only lifecycle management (Analyze → Development → Test → Production)
-- **JSON Database**: Strict schema enforcement with referential integrity
-- **Direct File Updates**: Automatically updates JSON files in data/ folder when you save
-- **Database Validation**: Prevents invalid data and maintains clean JSON structure
+- **Direct File Updates**: Uses File System Access API to directly modify JSON files in data/ folder
+- **Schema Validation**: Strict JSON schema enforcement with referential integrity
+- **Browser Storage Fallback**: Uses localStorage for unsupported browsers
 
 ## Installation & Setup
 
 ### Prerequisites
-- Node.js (version 14 or higher)
-- npm (Node Package Manager)
+- Modern browser with File System Access API support (Chrome/Edge 86+)
+- Any static file server (Python, Node.js, or live-server)
 
 ### Quick Start
 
-1. **Install dependencies:**
+1. **Serve the files locally:**
    ```bash
-   npm install
+   # Using Python
+   python3 -m http.server 8080
+
+   # Using Node.js (if you have it)
+   npx http-server -p 8080
+
+   # Using live-server (if installed)
+   live-server --port=8080
    ```
 
-2. **Start the server:**
-   ```bash
-   npm start
-   ```
-   
-   Or for development with auto-restart:
-   ```bash
-   npm run dev
-   ```
+2. **Open your browser:**
+   Navigate to `http://localhost:8080`
 
-3. **Open your browser:**
-   Navigate to `http://localhost:3000`
+3. **Grant file access:**
+   When you save data, the browser will prompt you to select the location for your JSON files
 
 ## How It Works
 
-The application uses a Node.js/Express server with strict database schema enforcement:
+The application uses modern browser File System Access API for direct file modification:
 
-1. **Serves the web application** on `http://localhost:3000`
-2. **Provides a REST API** that directly reads/writes JSON files in the `data/` folder
-3. **Enforces strict schemas** - only allows exact database field structures
-4. **Validates relationships** - ensures ID references exist between JSON files
-5. **Automatically creates** JSON files if they don't exist
-6. **Updates files instantly** when you click save buttons
-7. **Maintains database integrity** with referential validation
-
-### API Endpoints
-
-- `GET /api/{type}` - Get all items (projects, ideas, events, tasks, subtasks)
-- `POST /api/{type}` - Save new item or update existing item
-- `DELETE /api/{type}/{id}` - Delete specific item by ID
+1. **Client-side only** - no server required
+2. **Direct file access** - saves directly to your local `data/` folder
+3. **Strict schema enforcement** - only allows exact field structures
+4. **Relationship validation** - ensures ID references exist between files
+5. **Instant updates** - files are modified immediately when you click save
+6. **Fallback support** - uses localStorage for unsupported browsers
 
 ### File Structure
 
 ```
 project-tracker/
-├── data/                 # JSON data files (auto-created)
+├── data/                 # JSON data files (you choose location)
 │   ├── projects.json
 │   ├── ideas.json
 │   ├── events.json
@@ -70,19 +63,29 @@ project-tracker/
 ├── js/                   # JavaScript modules
 ├── css/                  # Stylesheets
 ├── pages/                # HTML page templates
-├── server.js             # Node.js server
-└── package.json          # Dependencies
+└── index.html            # Main application
 ```
 
 ## Usage
 
-1. **Start the server** with `npm start`
-2. **Open the application** in your browser at `http://localhost:3000`
+1. **Serve the files** using any static file server
+2. **Open the application** in your browser
 3. **Create projects, ideas, events, and tasks** using the interface
-4. **Click save buttons** - data is automatically saved to JSON files in `data/` folder
-5. **All changes are persistent** and immediately available
+4. **Click save buttons** - browser will prompt for file location on first save
+5. **All changes are saved directly** to your chosen JSON files
 
-## Strict Database Schema
+## Browser Compatibility
+
+### Full Support (File System Access API)
+- **Chrome 86+**: Direct file modification
+- **Edge 86+**: Direct file modification
+
+### Fallback Support (localStorage)
+- **Firefox**: Data saved to browser storage
+- **Safari**: Data saved to browser storage
+- **Older browsers**: Data saved to browser storage
+
+## Strict Schema Enforcement
 
 The application enforces exact JSON schemas with strict validation. **Only these fields are allowed** - any extra fields will be rejected.
 
@@ -153,28 +156,27 @@ The application enforces exact JSON schemas with strict validation. **Only these
 }
 ```
 
-## Database Features
+## Key Features
 
-- **Strict Schema Enforcement**: Only allows exact fields specified above
-- **Type Validation**: Arrays must be arrays, dates must be valid dates
+- **Schema Validation**: Only allows exact fields specified above
+- **Type Checking**: Arrays must be arrays, dates must be valid dates
 - **Referential Integrity**: ID references are validated across JSON files
 - **Required Fields**: Essential fields must be present and non-empty
 - **Forward-Only Lifecycle**: Subtasks can only progress (Analyze → Development → Test → Production)
-- **Clean JSON Output**: No extra fields or metadata pollute the database files
+- **Clean JSON Output**: No extra fields or metadata pollute the files
 
 ## Troubleshooting
 
-### Server Not Starting
-- Check if port 3000 is available
-- Ensure Node.js is installed
-- Run `npm install` to install dependencies
+### File Access Not Working
+- Ensure you're using Chrome 86+ or Edge 86+
+- Check that you granted file system permissions
+- Try refreshing the page and granting permissions again
 
 ### Data Not Saving
-- Ensure the server is running (`npm start`)
 - Check browser console for schema validation errors
-- Verify data/ folder has write permissions
-- Check that all required fields are filled
+- Verify all required fields are filled
 - Ensure no extra fields are being submitted
+- For unsupported browsers, data is saved to localStorage
 
 ### Schema Validation Errors
 - Check browser console for specific validation messages
@@ -188,36 +190,21 @@ The application enforces exact JSON schemas with strict validation. **Only these
 - Check that linked IDs exist in their respective JSON files
 - Verify ID format matches schema (proj_xxx, idea_xxx, etc.)
 
-### Files Not Updating
-- Restart the server if needed
-- Check server logs for validation error messages
-- Ensure JSON files in data/ folder have valid schema structure
-- Verify no corrupted JSON syntax in existing files
-
 ## Development
 
-To contribute or modify:
+This is a pure client-side application. To modify:
 
-1. **Install development dependencies:**
-   ```bash
-   npm install
-   ```
+1. **Edit JavaScript files** in the `js/` folder
+2. **Modify HTML templates** in the `pages/` folder
+3. **Update styles** in the `css/` folder
+4. **Test with any static file server**
 
-2. **Run in development mode:**
-   ```bash
-   npm run dev
-   ```
+## Technical Notes
 
-3. **The server will automatically restart** when you make changes to server.js
-
-## Notes
-
-- **Database-First Design**: JSON files serve as the primary database with strict schema enforcement
-- **Schema Validation**: All data is validated before saving to prevent corruption
-- **Referential Integrity**: ID relationships between files are automatically validated
-- **Clean Data**: No extra metadata or timestamps pollute the JSON database files
-- **Graceful Fallbacks**: Falls back to download mode if server is not available
-- **Data Backup**: All data is backed up to localStorage as a secondary measure
-- **Pretty JSON**: Files are formatted with proper indentation for easy reading
-- **Auto-Creation**: Server automatically creates missing JSON files with empty arrays
-- **Type Safety**: Arrays, dates, and status values are strictly type-checked
+- **Client-Side Architecture**: Pure browser-based application, no server dependencies
+- **Modern Web APIs**: Uses File System Access API for direct file operations
+- **Progressive Enhancement**: Falls back gracefully to localStorage
+- **Schema-First Design**: JSON files maintain strict structure
+- **Type Safety**: Arrays, dates, and status values are strictly validated
+- **Clean Data**: No metadata or timestamps pollute the JSON files
+- **Instant Updates**: Files are modified immediately upon save

@@ -157,6 +157,9 @@ class TemplateManager {
     }
 
     initializeEventPlanner() {
+        // Initialize resources functionality (like keywords)
+        this.initializeResources();
+        
         // Bind form submission
         const form = document.getElementById('event-planner-form');
         if (form) {
@@ -221,6 +224,76 @@ class TemplateManager {
         
         // Update hidden input
         this.updateKeywordsHidden(type);
+    }
+
+    initializeResources() {
+        const resourcesInput = document.getElementById('event-resources');
+        const resourceTags = document.getElementById('event-resource-tags');
+        
+        if (!resourcesInput || !resourceTags) return;
+
+        // Add resource on Enter key
+        resourcesInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.addResource();
+            }
+        });
+
+        // Global function for button click
+        window.addEventResource = () => {
+            this.addResource();
+        };
+    }
+
+    addResource() {
+        const input = document.getElementById('event-resources');
+        const tagsContainer = document.getElementById('event-resource-tags');
+        const hiddenInput = document.getElementById('event-resources-hidden');
+        
+        if (!input || !tagsContainer) return;
+
+        const resource = input.value.trim();
+        if (resource === '') return;
+
+        // Check for duplicates
+        const existingTags = tagsContainer.querySelectorAll('.keyword-tag');
+        const existingResources = Array.from(existingTags).map(tag => 
+            tag.textContent.replace('×', '').trim()
+        );
+        
+        if (existingResources.includes(resource)) {
+            input.value = '';
+            return;
+        }
+
+        // Create resource tag
+        const tag = document.createElement('span');
+        tag.className = 'keyword-tag';
+        tag.innerHTML = `
+            ${resource}
+            <span class="remove" onclick="this.parentElement.remove(); window.templateManager.updateResourcesHidden()">&times;</span>
+        `;
+        
+        tagsContainer.appendChild(tag);
+        input.value = '';
+        
+        // Update hidden input
+        this.updateResourcesHidden();
+    }
+
+    updateResourcesHidden() {
+        const tagsContainer = document.getElementById('event-resource-tags');
+        const hiddenInput = document.getElementById('event-resources-hidden');
+        
+        if (!tagsContainer || !hiddenInput) return;
+
+        const tags = tagsContainer.querySelectorAll('.keyword-tag');
+        const resources = Array.from(tags).map(tag => 
+            tag.textContent.replace('×', '').trim()
+        );
+        
+        hiddenInput.value = JSON.stringify(resources);
     }
 
     updateKeywordsHidden(type) {
@@ -295,7 +368,8 @@ class TemplateManager {
             const selectedEventIds = this.getSelectedValues('linked-event'); 
             const selectedTaskIds = this.getSelectedValues('linked-task');
             
-            // Database schema: { id, topic, planDueDate, name, keywords[], ideaId[], eventId[], goal, objective, taskId[] }
+            // Project data structure
+            const now = new Date().toISOString();
             const projectData = {
                 id: isEditMode ? window.currentEditProject.id : window.idGenerator.generateId('proj'),
                 topic: formData.get('topic'),
@@ -304,17 +378,18 @@ class TemplateManager {
                 keywords: JSON.parse(formData.get('keywords') || '[]'),
                 ideaId: selectedIdeaIds,
                 eventId: selectedEventIds,
-                goal: formData.get('goal'),
-                objective: formData.get('objective'),
-                taskId: selectedTaskIds
+                generalDescription: formData.get('generalDescription') || '',
+                goal: formData.get('goal') || '',
+                objective: formData.get('objective') || '',
+                taskId: selectedTaskIds,
+                createdAt: isEditMode ? window.currentEditProject.createdAt : now,
+                updatedAt: now
             };
 
             if (isEditMode) {
                 await window.dataManager.updateProject(projectData.id, projectData);
-                this.showSuccess('Project updated successfully!');
             } else {
                 await window.dataManager.saveProject(projectData);
-                this.showSuccess('Project saved successfully!');
             }
             
             // Reset form and return to appropriate page after 2 seconds
@@ -341,26 +416,33 @@ class TemplateManager {
         try {
             const formData = new FormData(form);
             const isEditMode = window.currentEditMode === 'edit' && window.currentEditIdea;
-            const taskIds = window.taskGrid ? window.taskGrid.getAllTaskIds() : [];
             
-            // Database schema: { id, topic, planDueDate, name, keywords[], goals, objectives, taskIds[] }
+            // Get IDs of already saved tasks from the grid
+            let taskIds = [];
+            if (window.taskGrid) {
+                taskIds = window.taskGrid.getSavedTaskIds();
+                console.log(`Linking ${taskIds.length} saved tasks to idea`);
+            }
+            
+            // Idea data structure
+            const now = new Date().toISOString();
             const ideaData = {
                 id: isEditMode ? window.currentEditIdea.id : window.idGenerator.generateId('idea'),
                 topic: formData.get('topic'),
                 planDueDate: formData.get('planDueDate'),
                 name: formData.get('name'),
                 keywords: JSON.parse(formData.get('keywords') || '[]'),
-                goals: formData.get('goals'),
-                objectives: formData.get('objectives'),
-                taskIds: taskIds
+                goals: formData.get('goals') || '',
+                objectives: formData.get('objectives') || '',
+                taskIds: taskIds,
+                createdAt: isEditMode ? window.currentEditIdea.createdAt : now,
+                updatedAt: now
             };
 
             if (isEditMode) {
                 await window.dataManager.updateIdea(ideaData.id, ideaData);
-                this.showSuccess('Idea updated successfully!');
             } else {
                 await window.dataManager.saveIdea(ideaData);
-                this.showSuccess('Idea saved successfully!');
             }
             
             setTimeout(() => {
@@ -388,24 +470,29 @@ class TemplateManager {
             const formData = new FormData(form);
             const isEditMode = window.currentEditMode === 'edit' && window.currentEditEvent;
             
-            // Database schema: { id, name, type, eventDate, duration, location, description, status }
+            // Event data structure
+            const now = new Date().toISOString();
             const eventData = {
                 id: isEditMode ? window.currentEditEvent.id : window.idGenerator.generateId('event'),
                 name: formData.get('name'),
                 type: formData.get('type'),
                 eventDate: formData.get('eventDate'),
-                duration: formData.get('duration'),
-                location: formData.get('location'),
-                description: formData.get('description'),
-                status: formData.get('status') || 'planning'
+                duration: parseFloat(formData.get('duration')) || 0,
+                location: formData.get('location') || '',
+                description: formData.get('description') || '',
+                status: formData.get('status') || 'planning',
+                createdAt: isEditMode ? window.currentEditEvent.createdAt : now,
+                updatedAt: now,
+                budget: parseFloat(formData.get('budget')) || 0,
+                organizer: formData.get('organizer') || '',
+                resources: JSON.parse(formData.get('resources') || '[]'),
+                agenda: formData.get('agenda') || ''
             };
 
             if (isEditMode) {
                 await window.dataManager.updateEvent(eventData.id, eventData);
-                this.showSuccess('Event updated successfully!');
             } else {
                 await window.dataManager.saveEvent(eventData);
-                this.showSuccess('Event saved successfully!');
             }
             
             setTimeout(() => {
@@ -642,7 +729,7 @@ class TemplateManager {
     }
 
     populateEventForm(form, event) {
-        // Only populate fields that match the new simplified schema
+        // Populate all event fields including new ones
         const fields = {
             'event-name': event.name,
             'event-type': event.type,
@@ -650,7 +737,10 @@ class TemplateManager {
             'event-duration': event.duration,
             'event-location': event.location,
             'event-description': event.description,
-            'event-status': event.status
+            'event-status': event.status,
+            'event-budget': event.budget,
+            'event-organizer': event.organizer,
+            'event-agenda': event.agenda
         };
 
         Object.entries(fields).forEach(([fieldId, value]) => {
@@ -659,6 +749,26 @@ class TemplateManager {
                 field.value = value;
             }
         });
+
+        // Populate resources
+        if (event.resources && event.resources.length > 0) {
+            const resourcesContainer = document.getElementById('event-resource-tags');
+            const hiddenInput = document.getElementById('event-resources-hidden');
+            
+            if (resourcesContainer && hiddenInput) {
+                resourcesContainer.innerHTML = '';
+                event.resources.forEach(resource => {
+                    const tag = document.createElement('span');
+                    tag.className = 'keyword-tag';
+                    tag.innerHTML = `
+                        ${resource}
+                        <span class="remove" onclick="this.parentElement.remove(); window.templateManager.updateResourcesHidden()">&times;</span>
+                    `;
+                    resourcesContainer.appendChild(tag);
+                });
+                hiddenInput.value = JSON.stringify(event.resources);
+            }
+        }
     }
 
     getSelectedValues(elementId) {

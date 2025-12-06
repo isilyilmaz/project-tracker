@@ -1,6 +1,5 @@
 class DataManager {
     constructor() {
-        this.apiBase = 'http://localhost:3000/api';
         this.dataFiles = {
             projects: 'data/projects.json',
             ideas: 'data/ideas.json',
@@ -9,7 +8,6 @@ class DataManager {
             subtasks: 'data/subtasks.json'
         };
         this.cache = {};
-        this.serverMode = true; // Flag to indicate server mode
         this.initializeData();
     }
 
@@ -22,27 +20,23 @@ class DataManager {
 
     async loadDataFile(type) {
         try {
-            let response;
-            if (this.serverMode) {
-                // Try to load from server API first
-                try {
-                    response = await fetch(`${this.apiBase}/${type}`);
-                    if (response.ok) {
-                        this.cache[type] = await response.json();
-                        console.log(`Loaded ${type} from server API`);
-                        return this.cache[type];
-                    }
-                } catch (serverError) {
-                    console.warn(`Server not available, falling back to local files for ${type}`);
-                    this.serverMode = false;
+            // Load data from server endpoint
+            try {
+                const response = await fetch(`http://localhost:3001/data/${type}`);
+                if (response.ok) {
+                    this.cache[type] = await response.json();
+                    console.log(`Loaded ${type} from server`);
+                    return this.cache[type];
                 }
+            } catch (serverError) {
+                console.log(`Server not available for loading ${type}, trying direct file access`);
             }
             
-            // Fallback to local file loading
-            response = await fetch(this.dataFiles[type]);
+            // Fallback: Load directly from JSON files
+            const response = await fetch(this.dataFiles[type]);
             if (response.ok) {
                 this.cache[type] = await response.json();
-                console.log(`Loaded ${type} from local file`);
+                console.log(`Loaded ${type} from JSON file`);
             } else {
                 console.warn(`Could not load ${type} data file, initializing empty array`);
                 this.cache[type] = [];
@@ -58,44 +52,33 @@ class DataManager {
         try {
             console.log(`Saving ${type} data:`, this.cache[type]);
             
-            if (this.serverMode) {
-                // Try to save via server API
-                try {
-                    const response = await fetch(`${this.apiBase}/${type}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(this.cache[type])
-                    });
+            // Try to save to server first (silent operation)
+            try {
+                const response = await fetch(`http://localhost:3001/save/${type}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.cache[type])
+                });
 
-                    if (response.ok) {
-                        const result = await response.json();
-                        console.log(`Successfully saved ${type} to server:`, result);
-                        this.showNotification(`${type}.json file updated successfully in data/ folder!`, 'success');
-                        return true;
-                    } else {
-                        throw new Error(`Server responded with status: ${response.status}`);
-                    }
-                } catch (serverError) {
-                    console.warn(`Server save failed for ${type}, falling back to download:`, serverError);
-                    this.serverMode = false;
+                if (response.ok) {
+                    // Silent success - file updated automatically
+                    console.log(`${type} data saved to file successfully`);
+                    // Also save to localStorage as backup
+                    localStorage.setItem(`${type}_data`, JSON.stringify(this.cache[type]));
+                    return true;
                 }
+            } catch (serverError) {
+                // Silent fallback - no user notification
+                console.log(`Server not available, using localStorage for ${type}`);
             }
             
-            // Fallback to download method
-            const jsonContent = JSON.stringify(this.cache[type], null, 2);
+            // Fallback to localStorage only
+            localStorage.setItem(`${type}_data`, JSON.stringify(this.cache[type]));
+            localStorage.setItem(`backup_${type}_data`, JSON.stringify(this.cache[type]));
             
-            // Update localStorage as backup storage
-            localStorage.setItem(`${type}`, JSON.stringify(this.cache[type]));
-            localStorage.setItem(`backup_${type}`, JSON.stringify(this.cache[type]));
-            
-            // Automatically download the updated JSON file
-            this.downloadJSONFile(type, jsonContent);
-            
-            // Show success notification
-            this.showNotification(`Server not available. ${type}.json file downloaded - move it to your data/ folder.`, 'warning');
-            
+            console.log(`${type} data saved to localStorage`);
             return true;
         } catch (error) {
             console.error(`Error saving ${type} data:`, error);
@@ -103,196 +86,7 @@ class DataManager {
         }
     }
 
-    downloadJSONFile(type, jsonContent) {
-        try {
-            // Create blob with JSON content
-            const blob = new Blob([jsonContent], { type: 'application/json' });
-            
-            // Create download link
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${type}.json`;
-            link.style.display = 'none';
-            
-            // Trigger download
-            document.body.appendChild(link);
-            link.click();
-            
-            // Cleanup
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            
-            console.log(`Downloaded ${type}.json file`);
-        } catch (error) {
-            console.error(`Error downloading ${type}.json:`, error);
-            // Fallback to clipboard copying
-            this.showJSONForFileUpdate(type, jsonContent);
-        }
-    }
 
-    async copyToClipboard(text) {
-        try {
-            if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(text);
-                return true;
-            } else {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                textArea.style.top = '-999999px';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                const successful = document.execCommand('copy');
-                document.body.removeChild(textArea);
-                return successful;
-            }
-        } catch (error) {
-            console.error('Error copying to clipboard:', error);
-            return false;
-        }
-    }
-
-    showJSONForFileUpdate(type, jsonContent) {
-        const modal = document.createElement('div');
-        modal.className = 'json-update-modal';
-        modal.innerHTML = `
-            <div class="json-update-content">
-                <div class="json-update-header">
-                    <h3>💾 Update ${type}.json File</h3>
-                    <button class="close-instructions" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
-                </div>
-                <div class="json-update-body">
-                    <div class="update-step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <strong>Copy JSON Data</strong>
-                            <p>Click the button below to copy the updated JSON data to your clipboard.</p>
-                        </div>
-                    </div>
-                    <div class="update-step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <strong>Update File</strong>
-                            <p>Open <code>data/${type}.json</code> in your editor and paste the new content.</p>
-                        </div>
-                    </div>
-                    <div class="update-step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <strong>Save & Refresh</strong>
-                            <p>Save the file and refresh your browser to see the changes.</p>
-                        </div>
-                    </div>
-                    <div class="json-preview">
-                        <h4>Preview (first 500 characters):</h4>
-                        <pre class="json-preview-text">${jsonContent.substring(0, 500)}${jsonContent.length > 500 ? '...' : ''}</pre>
-                    </div>
-                </div>
-                <div class="json-update-actions">
-                    <button class="btn btn-primary" onclick="window.dataManager.copyJSONToClipboard('${type}')">
-                        📋 Copy to Clipboard
-                    </button>
-                    <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">
-                        Close
-                    </button>
-                    <button class="btn btn-info" onclick="window.dataManager.showFullJSON('${type}')">
-                        👁️ View Full JSON
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        // Style the modal
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Auto-remove after 30 seconds
-        setTimeout(() => {
-            if (modal.parentElement) {
-                modal.remove();
-            }
-        }, 30000);
-    }
-
-    async copyJSONToClipboard(type) {
-        try {
-            const jsonContent = JSON.stringify(this.cache[type], null, 2);
-            const success = await this.copyToClipboard(jsonContent);
-            
-            if (success) {
-                this.showNotification('JSON data copied to clipboard! Paste it into data/' + type + '.json', 'success');
-            } else {
-                this.showNotification('Failed to copy to clipboard. Please use the View Full JSON option.', 'error');
-            }
-        } catch (error) {
-            console.error('Error copying JSON:', error);
-            this.showNotification('Error copying JSON: ' + error.message, 'error');
-        }
-    }
-
-    showFullJSON(type) {
-        const jsonContent = JSON.stringify(this.cache[type], null, 2);
-        const modal = document.createElement('div');
-        modal.className = 'full-json-modal';
-        modal.innerHTML = `
-            <div class="full-json-content">
-                <div class="full-json-header">
-                    <h3>Full JSON Content for ${type}.json</h3>
-                    <button class="close-instructions" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
-                </div>
-                <div class="full-json-body">
-                    <div class="json-actions">
-                        <button class="btn btn-primary" onclick="window.dataManager.selectAllJSON()">
-                            Select All
-                        </button>
-                        <button class="btn btn-secondary" onclick="window.dataManager.copyJSONToClipboard('${type}')">
-                            Copy to Clipboard
-                        </button>
-                    </div>
-                    <textarea id="full-json-textarea" readonly class="full-json-textarea">${jsonContent}</textarea>
-                </div>
-            </div>
-        `;
-        
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
-        `;
-        
-        document.body.appendChild(modal);
-    }
-
-    selectAllJSON() {
-        const textarea = document.getElementById('full-json-textarea');
-        if (textarea) {
-            textarea.select();
-            textarea.setSelectionRange(0, 99999); // For mobile devices
-        }
-    }
 
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
@@ -337,7 +131,7 @@ class DataManager {
             await this.loadDataFile(type);
         }
         
-        // Validate database schema (strict)
+        // Validate schema (strict)
         this.validateSchema(type, item);
         
         // Validate relationships between JSON files
@@ -358,15 +152,19 @@ class DataManager {
             throw new Error(`${type} with id ${id} not found`);
         }
 
-        const mergedItem = { ...this.cache[type][index], ...updatedItem };
+        // Use clean updated data with preserved ID to avoid extra fields
+        const cleanItem = { 
+            ...updatedItem,  // Use only the new clean schema data
+            id: this.cache[type][index].id  // Preserve the original ID
+        };
 
-        // Validate database schema (strict)
-        this.validateSchema(type, mergedItem);
+        // Validate schema (strict)
+        this.validateSchema(type, cleanItem);
 
         // Validate relationships between JSON files
-        await this.validateRelationships(type, mergedItem);
+        await this.validateRelationships(type, cleanItem);
 
-        this.cache[type][index] = mergedItem;
+        this.cache[type][index] = cleanItem;
         await this.saveDataFile(type);
         return this.cache[type][index];
     }
@@ -383,37 +181,19 @@ class DataManager {
             throw new Error(`${type} with id ${id} not found`);
         }
 
-        if (this.serverMode) {
-            // Try to delete via server API
-            try {
-                const response = await fetch(`${this.apiBase}/${type}/${id}`, {
-                    method: 'DELETE',
-                });
-
-                if (response.ok) {
-                    console.log(`Successfully deleted ${type} ${id} from server`);
-                    return true;
-                } else {
-                    console.warn(`Server delete failed, updating with current cache`);
-                }
-            } catch (serverError) {
-                console.warn(`Server delete failed for ${type} ${id}, updating with current cache:`, serverError);
-            }
-        }
-
-        // Fallback to saving entire updated array
+        // Save the updated array
         await this.saveDataFile(type);
         return true;
     }
 
     validateSchema(type, item) {
-        // Strict database schemas - only allow these exact fields
+        // Strict schemas - only allow these exact fields
         const schemas = {
-            projects: ['id', 'topic', 'planDueDate', 'name', 'keywords', 'ideaId', 'eventId', 'goal', 'objective', 'taskId'],
-            ideas: ['id', 'topic', 'planDueDate', 'name', 'keywords', 'goals', 'objectives', 'taskIds'],
-            events: ['id', 'name', 'type', 'eventDate', 'duration', 'location', 'description', 'status'],
-            tasks: ['id', 'name', 'dueDate', 'doneStatus', 'notes', 'subtaskIds'],
-            subtasks: ['id', 'name', 'dueDate', 'taskType', 'assignee']
+            projects: ['id', 'topic', 'planDueDate', 'name', 'keywords', 'ideaId', 'eventId', 'generalDescription', 'goal', 'objective', 'taskId', 'createdAt', 'updatedAt'],
+            ideas: ['id', 'topic', 'planDueDate', 'name', 'keywords', 'goals', 'objectives', 'taskIds', 'createdAt', 'updatedAt'],
+            events: ['id', 'name', 'type', 'eventDate', 'duration', 'location', 'description', 'status', 'createdAt', 'updatedAt', 'budget', 'organizer', 'resources', 'agenda'],
+            tasks: ['id', 'name', 'dueDate', 'doneStatus', 'notes', 'subtaskIds', 'createdAt', 'updatedAt'],
+            subtasks: ['id', 'name', 'dueDate', 'taskType', 'assignee', 'createdAt', 'updatedAt']
         };
 
         const allowedFields = schemas[type];
@@ -448,6 +228,7 @@ class DataManager {
         const arrayFields = {
             projects: ['keywords', 'ideaId', 'eventId', 'taskId'],
             ideas: ['keywords', 'taskIds'],
+            events: ['resources'],
             tasks: ['subtaskIds']
         };
 
@@ -508,7 +289,7 @@ class DataManager {
     }
 
     async validateRelationships(type, item) {
-        // Validate ID references between JSON files for database integrity
+        // Validate ID references between JSON files
         try {
             if (type === 'projects') {
                 // Validate ideaId references
@@ -588,6 +369,11 @@ class DataManager {
         projectData.eventId = projectData.eventId || [];
         projectData.taskId = projectData.taskId || [];
         
+        // Add timestamps
+        const now = new Date().toISOString();
+        projectData.createdAt = projectData.createdAt || now;
+        projectData.updatedAt = now;
+        
         return await this.addData('projects', projectData);
     }
 
@@ -612,6 +398,11 @@ class DataManager {
     async saveIdea(ideaData) {
         ideaData.keywords = ideaData.keywords || [];
         ideaData.taskIds = ideaData.taskIds || [];
+        
+        // Add timestamps
+        const now = new Date().toISOString();
+        ideaData.createdAt = ideaData.createdAt || now;
+        ideaData.updatedAt = now;
         
         return await this.addData('ideas', ideaData);
     }
@@ -642,6 +433,14 @@ class DataManager {
     }
 
     async saveEvent(eventData) {
+        // Ensure arrays for new schema
+        eventData.resources = eventData.resources || [];
+        
+        // Add timestamps
+        const now = new Date().toISOString();
+        eventData.createdAt = eventData.createdAt || now;
+        eventData.updatedAt = now;
+        
         return await this.addData('events', eventData);
     }
 
@@ -665,6 +464,11 @@ class DataManager {
 
     async saveTask(taskData) {
         taskData.subtaskIds = taskData.subtaskIds || [];
+        
+        // Add timestamps
+        const now = new Date().toISOString();
+        taskData.createdAt = taskData.createdAt || now;
+        taskData.updatedAt = now;
         
         return await this.addData('tasks', taskData);
     }
@@ -721,6 +525,11 @@ class DataManager {
     async saveSubtask(subtaskData) {
         // Default to Analyze stage if not specified
         subtaskData.taskType = subtaskData.taskType || 'Analyze';
+        
+        // Add timestamps
+        const now = new Date().toISOString();
+        subtaskData.createdAt = subtaskData.createdAt || now;
+        subtaskData.updatedAt = now;
         
         return await this.addData('subtasks', subtaskData);
     }

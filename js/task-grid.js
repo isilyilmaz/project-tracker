@@ -76,22 +76,50 @@ class TaskGrid {
 
         const task = this.tasks.find(t => t.id === taskId);
         if (task) {
+            const now = new Date().toISOString();
+            const wasNew = task.isNew;
+            
             task.name = nameInput.value.trim();
             task.dueDate = dueDateInput.value;
             task.doneStatus = statusSelect.value;
             task.notes = notesInput.value;
-            task.subtaskIds = task.subtaskIds || []; // Ensure subtaskIds array exists
+            task.subtaskIds = task.subtaskIds || [];
+            
+            // Add timestamps
+            if (wasNew) {
+                task.createdAt = now;
+            }
+            task.updatedAt = now;
             task.isNew = false;
 
-            // Save to data manager (which will create JSON file)
+            // Save to data manager
             try {
-                if (task.isNew !== false) {
-                    await window.dataManager.saveTask(task);
+                // Create clean task object with only allowed schema fields
+                const taskData = {
+                    id: task.id,
+                    name: task.name,
+                    dueDate: task.dueDate,
+                    doneStatus: task.doneStatus,
+                    notes: task.notes,
+                    subtaskIds: task.subtaskIds,
+                    createdAt: task.createdAt,
+                    updatedAt: task.updatedAt
+                };
+                
+                if (wasNew) {
+                    await window.dataManager.saveTask(taskData);
+                    console.log(`Task saved: ${task.name}`);
                 } else {
-                    await window.dataManager.updateTask(taskId, task);
+                    await window.dataManager.updateTask(taskId, taskData);
+                    console.log(`Task updated: ${task.name}`);
                 }
+                
+                // Show success feedback
+                this.showTaskSaveSuccess(task.name);
             } catch (error) {
                 console.error('Error saving task:', error);
+                alert('Failed to save task. Please try again.');
+                return;
             }
         }
 
@@ -223,8 +251,108 @@ class TaskGrid {
         return this.tasks.filter(task => !task.isNew).map(task => task.id);
     }
 
+    getSavedTaskIds() {
+        return this.tasks.filter(task => !task.isNew && task.name && task.name.trim() !== '').map(task => task.id);
+    }
+
+    showTaskSaveSuccess(taskName) {
+        // Create a temporary success message
+        const message = document.createElement('div');
+        message.className = 'task-save-success';
+        message.textContent = `Task "${taskName}" saved!`;
+        message.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        `;
+        
+        document.body.appendChild(message);
+        
+        // Fade in
+        setTimeout(() => {
+            message.style.opacity = '1';
+        }, 10);
+        
+        // Fade out and remove
+        setTimeout(() => {
+            message.style.opacity = '0';
+            setTimeout(() => {
+                if (message.parentNode) {
+                    message.parentNode.removeChild(message);
+                }
+            }, 300);
+        }, 2000);
+    }
+
     getAllTasks() {
         return this.tasks.filter(task => !task.isNew);
+    }
+
+    async saveAllTasks() {
+        // First, update tasks with current form data
+        this.updateTasksFromForm();
+        
+        const savedTaskIds = [];
+        
+        for (const task of this.tasks) {
+            // Skip empty tasks
+            if (!task.name || task.name.trim() === '') {
+                continue;
+            }
+            
+            // Ensure task has required fields
+            task.name = task.name.trim();
+            task.dueDate = task.dueDate || '';
+            task.doneStatus = task.doneStatus || 'pending';
+            task.notes = task.notes || '';
+            task.subtaskIds = task.subtaskIds || [];
+            
+            try {
+                if (task.isNew) {
+                    // Save new task
+                    task.isNew = false;
+                    await window.dataManager.saveTask(task);
+                    console.log(`Saved new task: ${task.id}`);
+                } else {
+                    // Update existing task
+                    await window.dataManager.updateTask(task.id, task);
+                    console.log(`Updated task: ${task.id}`);
+                }
+                
+                savedTaskIds.push(task.id);
+            } catch (error) {
+                console.error(`Error saving task ${task.id}:`, error);
+                // Continue with other tasks even if one fails
+            }
+        }
+        
+        return savedTaskIds;
+    }
+
+    updateTasksFromForm() {
+        // Update task objects with current form field values
+        this.tasks.forEach(task => {
+            const taskRow = this.gridBody.querySelector(`[data-task-id="${task.id}"]`);
+            if (taskRow) {
+                const nameInput = taskRow.querySelector('.task-name-input');
+                const dueDateInput = taskRow.querySelector('.task-date-input');
+                const statusSelect = taskRow.querySelector('.task-status-select');
+                const notesInput = taskRow.querySelector('.task-notes-input');
+
+                if (nameInput) task.name = nameInput.value.trim();
+                if (dueDateInput) task.dueDate = dueDateInput.value;
+                if (statusSelect) task.doneStatus = statusSelect.value;
+                if (notesInput) task.notes = notesInput.value;
+            }
+        });
     }
 
     loadTasks(taskIds) {
@@ -242,6 +370,10 @@ class TaskGrid {
             this.tasks = [];
             this.renderGrid();
         });
+    }
+
+    loadTasksForEdit(taskIds) {
+        this.loadTasks(taskIds);
     }
 
     clearAllTasks() {
@@ -324,16 +456,6 @@ class TaskGrid {
         };
     }
 
-    exportTasks() {
-        const tasksData = this.getAllTasks();
-        const dataStr = JSON.stringify(tasksData, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(dataBlob);
-        link.download = `tasks_export_${new Date().toISOString().split('T')[0]}.json`;
-        link.click();
-    }
 
     importTasks(jsonData) {
         try {

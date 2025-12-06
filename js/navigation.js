@@ -40,16 +40,16 @@ class Navigation {
         }
     }
 
-    navigateTo(page) {
+    navigateTo(page, params = {}) {
         if (!this.initialized) {
             console.warn('Navigation not yet initialized, retrying...');
-            setTimeout(() => this.navigateTo(page), 100);
+            setTimeout(() => this.navigateTo(page, params), 100);
             return;
         }
         
-        if (this.currentPage !== page) {
+        if (this.currentPage !== page || Object.keys(params).length > 0) {
             this.updateActiveLink(page);
-            this.loadPage(page);
+            this.loadPage(page, params);
             this.currentPage = page;
         }
     }
@@ -65,7 +65,7 @@ class Navigation {
         }
     }
 
-    async loadPage(page) {
+    async loadPage(page, params = {}) {
         try {
             if (!this.contentArea) {
                 console.error('Content area not available');
@@ -82,7 +82,7 @@ class Navigation {
             const content = await response.text();
             this.contentArea.innerHTML = content;
             
-            this.initializePageSpecificFeatures(page);
+            this.initializePageSpecificFeatures(page, params);
             
         } catch (error) {
             console.error('Error loading page:', error);
@@ -97,7 +97,7 @@ class Navigation {
         }
     }
 
-    initializePageSpecificFeatures(page) {
+    initializePageSpecificFeatures(page, params = {}) {
         switch (page) {
             case 'create-project':
                 if (window.templateManager) {
@@ -115,6 +115,16 @@ class Navigation {
                 break;
             case 'home':
                 this.loadDashboardData();
+                break;
+            case 'task-detail':
+                if (window.taskDetailManager && params.taskId) {
+                    window.taskDetailManager.init(params.taskId);
+                }
+                break;
+            case 'subtask-detail':
+                if (window.subtaskDetailManager && params.subtaskId && params.taskId) {
+                    window.subtaskDetailManager.init(params.subtaskId, params.taskId);
+                }
                 break;
         }
     }
@@ -771,12 +781,12 @@ class Navigation {
 window.navigation = new Navigation();
 
 // Ensure navigation is available globally for buttons
-window.navigateToPage = function(page) {
+window.navigateToPage = function(page, params = {}) {
     if (window.navigation && typeof window.navigation.navigateTo === 'function') {
-        window.navigation.navigateTo(page);
+        window.navigation.navigateTo(page, params);
     } else {
         console.warn('Navigation not ready, retrying in 100ms...');
-        setTimeout(() => window.navigateToPage(page), 100);
+        setTimeout(() => window.navigateToPage(page, params), 100);
     }
 };
 

@@ -62,11 +62,21 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="linked-task" class="form-label">Direct Tasks</label>
-                    <select id="linked-task" name="taskId" class="form-select" multiple size="4">
-                        <!-- Options will be loaded dynamically -->
-                    </select>
-                    <small class="form-help">Hold Ctrl/Cmd to select multiple tasks</small>
+                    <label class="form-label">Related Tasks</label>
+                    <div class="project-tasks-grid-container">
+                        <div class="project-tasks-grid" id="project-tasks-grid">
+                            <div class="tasks-grid-header">
+                                <div class="grid-cell">Select</div>
+                                <div class="grid-cell">Task Name</div>
+                                <div class="grid-cell">Status</div>
+                                <div class="grid-cell">Due Date</div>
+                            </div>
+                            <div class="tasks-grid-body" id="project-tasks-grid-body">
+                                <!-- Tasks will be loaded here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    <small class="form-help">Tasks are filtered based on selected ideas above. Check boxes to link tasks to this project. Double-click a task to view details.</small>
                 </div>
             </div>
         </div>

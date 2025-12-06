@@ -1,0 +1,554 @@
+/* Task Detail Page Styles */
+.task-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: var(--wilderness-white);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--wilderness-sage);
+}
+
+.back-btn {
+    background-color: var(--wilderness-sage);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+    background-color: var(--wilderness-pine);
+}
+
+.task-title {
+    color: var(--wilderness-pine);
+    margin: 0;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* Task Info Section */
+.task-info-section {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.task-basic-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item label {
+    font-weight: bold;
+    color: var(--wilderness-pine);
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.info-item span {
+    color: var(--wilderness-charcoal);
+    padding: 0.5rem;
+    background-color: white;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+.task-notes-section label {
+    font-weight: bold;
+    color: var(--wilderness-pine);
+    margin-bottom: 0.5rem;
+    display: block;
+    font-size: 0.9rem;
+}
+
+.task-notes-section p {
+    color: var(--wilderness-charcoal);
+    padding: 1rem;
+    background-color: white;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    margin: 0;
+    min-height: 3rem;
+}
+
+/* Status Workflow Section */
+.status-workflow-section {
+    margin-bottom: 2rem;
+}
+
+.status-workflow-section h2 {
+    color: var(--wilderness-pine);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.workflow-progress {
+    background-color: #f8f9fa;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.workflow-steps {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.workflow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 120px;
+}
+
+.step-indicator {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid #dee2e6;
+    background-color: white;
+    position: relative;
+    transition: all 0.3s;
+    margin-bottom: 0.5rem;
+}
+
+.workflow-step.completed .step-indicator {
+    background-color: var(--wilderness-sage);
+    border-color: var(--wilderness-sage);
+}
+
+.workflow-step.completed .step-indicator::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.workflow-step.current .step-indicator {
+    background-color: var(--wilderness-pine);
+    border-color: var(--wilderness-pine);
+    animation: pulse 2s infinite;
+}
+
+.workflow-step.current .step-indicator::after {
+    content: '●';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.workflow-step.upcoming .step-indicator {
+    background-color: white;
+    border-color: #dee2e6;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(44, 62, 80, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(44, 62, 80, 0);
+    }
+}
+
+.step-label {
+    font-size: 0.8rem;
+    text-align: center;
+    color: var(--wilderness-charcoal);
+    font-weight: 500;
+    max-width: 120px;
+    line-height: 1.2;
+}
+
+.workflow-step.current .step-label {
+    color: var(--wilderness-pine);
+    font-weight: bold;
+}
+
+.workflow-connector {
+    flex: 1;
+    height: 3px;
+    background-color: #dee2e6;
+    margin: 0 0.5rem;
+    position: relative;
+    top: -20px;
+    min-width: 20px;
+}
+
+.workflow-step.completed + .workflow-connector {
+    background-color: var(--wilderness-sage);
+}
+
+.workflow-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.workflow-actions .btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.workflow-actions .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Parent Idea Section */
+.parent-idea-section {
+    margin-bottom: 2rem;
+}
+
+.parent-idea-section h2::before {
+    content: "💡";
+    font-size: 1.2rem;
+}
+
+.parent-idea-link {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.idea-link-button {
+    background: linear-gradient(135deg, var(--wilderness-light), var(--wilderness-orange));
+    color: var(--wilderness-charcoal);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    min-width: 200px;
+}
+
+.idea-link-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.idea-link-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.idea-icon {
+    font-size: 1.2rem;
+}
+
+.link-arrow {
+    font-size: 1.1rem;
+    margin-left: auto;
+}
+
+/* Status Selector Modal */
+.status-options {
+    padding: 1rem;
+}
+
+.status-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.status-option:hover {
+    border-color: var(--wilderness-sage);
+    background-color: #f8f9fa;
+}
+
+.status-option.current-option {
+    border-color: var(--wilderness-pine);
+    background-color: #e8f4f5;
+    font-weight: bold;
+}
+
+.status-label {
+    font-size: 1rem;
+    color: var(--wilderness-charcoal);
+}
+
+.current-indicator {
+    color: var(--wilderness-pine);
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Subtasks Section */
+.subtasks-section {
+    margin-bottom: 2rem;
+}
+
+.subtasks-section h2 {
+    color: var(--wilderness-pine);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.subtasks-header {
+    margin-bottom: 1rem;
+}
+
+.subtasks-list {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 200px;
+}
+
+.empty-subtasks {
+    text-align: center;
+    color: #6c757d;
+    padding: 3rem;
+    font-style: italic;
+}
+
+.subtask-item {
+    background-color: white;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: box-shadow 0.3s;
+}
+
+.subtask-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.subtask-info {
+    flex: 1;
+}
+
+.subtask-name {
+    font-weight: bold;
+    color: var(--wilderness-pine);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.subtask-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.subtask-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.subtask-status.status-start {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.subtask-status.status-done {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+}
+
+.subtask-date {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.subtask-description {
+    color: var(--wilderness-charcoal);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.subtask-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Task Actions */
+.task-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    background-color: var(--wilderness-sage);
+    color: white;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal form {
+    padding: 1.5rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .task-detail-container {
+        padding: 1rem;
+    }
+    
+    .detail-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .task-title {
+        font-size: 1.5rem;
+    }
+    
+    .task-basic-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .workflow-steps {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .workflow-connector {
+        display: none;
+    }
+    
+    .workflow-actions {
+        flex-direction: column;
+    }
+    
+    .idea-link-button {
+        min-width: 100%;
+        justify-content: center;
+    }
+    
+    .task-actions {
+        flex-direction: column;
+    }
+    
+    .subtask-item {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .subtask-actions {
+        align-self: flex-end;
+    }
+}

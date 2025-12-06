@@ -193,7 +193,7 @@ class DataManager {
             ideas: ['id', 'topic', 'planDueDate', 'name', 'keywords', 'goals', 'objectives', 'taskIds', 'createdAt', 'updatedAt'],
             events: ['id', 'name', 'type', 'eventDate', 'duration', 'location', 'description', 'status', 'createdAt', 'updatedAt', 'budget', 'organizer', 'resources', 'agenda'],
             tasks: ['id', 'name', 'dueDate', 'doneStatus', 'notes', 'subtaskIds', 'createdAt', 'updatedAt'],
-            subtasks: ['id', 'name', 'dueDate', 'taskType', 'assignee', 'createdAt', 'updatedAt']
+            subtasks: ['id', 'taskId', 'name', 'description', 'status', 'comments', 'efforts', 'createdAt', 'updatedAt']
         };
 
         const allowedFields = schemas[type];
@@ -214,7 +214,7 @@ class DataManager {
             ideas: ['id', 'topic', 'planDueDate', 'name'],
             events: ['id', 'name', 'type', 'eventDate'],
             tasks: ['id', 'name', 'dueDate', 'doneStatus'],
-            subtasks: ['id', 'name', 'dueDate', 'taskType']
+            subtasks: ['id', 'taskId', 'name', 'status']
         };
 
         if (requiredFields[type]) {
@@ -229,7 +229,8 @@ class DataManager {
             projects: ['keywords', 'ideaId', 'eventId', 'taskId'],
             ideas: ['keywords', 'taskIds'],
             events: ['resources'],
-            tasks: ['subtaskIds']
+            tasks: ['subtaskIds'],
+            subtasks: ['comments', 'efforts']
         };
 
         if (arrayFields[type]) {
@@ -243,19 +244,24 @@ class DataManager {
             });
         }
 
-        // Validate subtask taskType (forward-only lifecycle)
-        if (type === 'subtasks' && item.taskType) {
-            const validTypes = ['Analyze', 'Development', 'Test', 'Production'];
-            if (!validTypes.includes(item.taskType)) {
-                throw new Error(`Invalid taskType: ${item.taskType}. Must be one of: ${validTypes.join(', ')}`);
+        // Validate task doneStatus (8-step workflow)
+        if (type === 'tasks' && item.doneStatus) {
+            const validStatuses = [
+                'ready_to_analyze', 'complete_analyze', 
+                'ready_to_development', 'complete_development',
+                'ready_to_test', 'test_done',
+                'ready_to_production', 'production_done'
+            ];
+            if (!validStatuses.includes(item.doneStatus)) {
+                throw new Error(`Invalid doneStatus: ${item.doneStatus}. Must be one of: ${validStatuses.join(', ')}`);
             }
         }
 
-        // Validate task doneStatus
-        if (type === 'tasks' && item.doneStatus) {
-            const validStatuses = ['pending', 'incomplete', 'complete', 'overdue'];
-            if (!validStatuses.includes(item.doneStatus)) {
-                throw new Error(`Invalid doneStatus: ${item.doneStatus}. Must be one of: ${validStatuses.join(', ')}`);
+        // Validate subtask status
+        if (type === 'subtasks' && item.status) {
+            const validStatuses = ['start', 'done'];
+            if (!validStatuses.includes(item.status)) {
+                throw new Error(`Invalid subtask status: ${item.status}. Must be one of: ${validStatuses.join(', ')}`);
             }
         }
 

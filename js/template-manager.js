@@ -312,17 +312,25 @@ class TemplateManager {
 
     async loadProjectDropdowns() {
         try {
+            // Store reference to ideas and tasks data for filtering
+            this.allIdeas = await window.dataManager.getAllIdeas();
+            this.allTasks = await window.dataManager.getAllTasks();
+            
             // Load ideas for multi-select dropdown
-            const ideas = await window.dataManager.getAllIdeas();
             const ideaSelect = document.getElementById('linked-idea');
             if (ideaSelect) {
                 ideaSelect.multiple = true;
                 ideaSelect.innerHTML = '';
-                ideas.forEach(idea => {
+                this.allIdeas.forEach(idea => {
                     const option = document.createElement('option');
                     option.value = idea.id;
                     option.textContent = idea.name;
                     ideaSelect.appendChild(option);
+                });
+                
+                // Add event listener for idea selection changes
+                ideaSelect.addEventListener('change', () => {
+                    this.renderProjectTasksGrid();
                 });
             }
 
@@ -340,22 +348,124 @@ class TemplateManager {
                 });
             }
 
-            // Load tasks for multi-select dropdown
-            const tasks = await window.dataManager.getAllTasks();
-            const taskSelect = document.getElementById('linked-task');
-            if (taskSelect) {
-                taskSelect.multiple = true;
-                taskSelect.innerHTML = '';
-                tasks.forEach(task => {
-                    const option = document.createElement('option');
-                    option.value = task.id;
-                    option.textContent = task.name;
-                    taskSelect.appendChild(option);
-                });
-            }
+            // Initialize tasks grid (initially empty with helper text)
+            this.initializeProjectTasksGrid();
+            
         } catch (error) {
             console.error('Error loading dropdown data:', error);
         }
+    }
+
+    initializeProjectTasksGrid() {
+        const gridBody = document.getElementById('project-tasks-grid-body');
+        if (gridBody) {
+            gridBody.innerHTML = `
+                <div class="empty-tasks-message">
+                    <p>Select ideas first to see related tasks</p>
+                </div>
+            `;
+        }
+    }
+
+    renderProjectTasksGrid() {
+        const ideaSelect = document.getElementById('linked-idea');
+        const gridBody = document.getElementById('project-tasks-grid-body');
+        
+        if (!ideaSelect || !gridBody || !this.allIdeas || !this.allTasks) {
+            return;
+        }
+
+        // Get selected idea IDs
+        const selectedIdeaIds = Array.from(ideaSelect.selectedOptions).map(option => option.value);
+        
+        // Store currently selected task IDs to preserve them
+        const currentlySelectedTaskIds = this.getSelectedTaskIds();
+        
+        if (selectedIdeaIds.length === 0) {
+            // No ideas selected, show helper text
+            gridBody.innerHTML = `
+                <div class="empty-tasks-message">
+                    <p>Select ideas first to see related tasks</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Find all tasks that belong to the selected ideas
+        const relevantTaskIds = new Set();
+        selectedIdeaIds.forEach(ideaId => {
+            const idea = this.allIdeas.find(i => i.id === ideaId);
+            if (idea && idea.taskIds) {
+                idea.taskIds.forEach(taskId => relevantTaskIds.add(taskId));
+            }
+        });
+        
+        // Filter tasks
+        const relevantTasks = this.allTasks.filter(task => relevantTaskIds.has(task.id));
+        
+        if (relevantTasks.length === 0) {
+            gridBody.innerHTML = `
+                <div class="empty-tasks-message">
+                    <p>Selected ideas have no associated tasks</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Render tasks in grid
+        const tasksHTML = relevantTasks.map(task => {
+            const isSelected = currentlySelectedTaskIds.includes(task.id);
+            const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-';
+            const statusClass = task.doneStatus.replace(/_/g, '-');
+            
+            return `
+                <div class="task-grid-row" data-task-id="${task.id}" ondblclick="window.templateManager.openTaskDetail('${task.id}')">
+                    <div class="grid-cell">
+                        <input type="checkbox" 
+                               class="task-checkbox" 
+                               value="${task.id}" 
+                               ${isSelected ? 'checked' : ''}
+                               onclick="event.stopPropagation()">
+                    </div>
+                    <div class="grid-cell task-name">
+                        ${task.name}
+                    </div>
+                    <div class="grid-cell task-status">
+                        <span class="status-badge status-${statusClass}">
+                            ${this.getStatusDisplay(task.doneStatus)}
+                        </span>
+                    </div>
+                    <div class="grid-cell task-due-date">
+                        ${dueDate}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        gridBody.innerHTML = tasksHTML;
+    }
+
+    getStatusDisplay(status) {
+        const statusMap = {
+            'ready_to_analyze': 'Ready to Analyze',
+            'complete_analyze': 'Complete Analyze',
+            'ready_to_development': 'Ready to Development', 
+            'complete_development': 'Complete Development',
+            'ready_to_test': 'Ready to Test',
+            'test_done': 'Test Done',
+            'ready_to_production': 'Ready to Production',
+            'production_done': 'Production Done'
+        };
+        return statusMap[status] || status;
+    }
+
+    getSelectedTaskIds() {
+        const checkboxes = document.querySelectorAll('#project-tasks-grid-body .task-checkbox:checked');
+        return Array.from(checkboxes).map(checkbox => checkbox.value);
+    }
+
+    openTaskDetail(taskId) {
+        window.navigateToPage('task-detail', { taskId: taskId });
     }
 
     async handleProjectSubmission(form) {
@@ -603,14 +713,28 @@ class TemplateManager {
         });
 
         // Populate array fields (ideaId, eventId, taskId)
+        // Set ideas first
         if (project.ideaId) {
             this.setSelectedValues('linked-idea', project.ideaId);
+            // Trigger task grid rendering after idea selection
+            setTimeout(() => {
+                this.renderProjectTasksGrid();
+                // Then set task selections after grid rendering
+                if (project.taskId) {
+                    setTimeout(() => {
+                        this.setSelectedValues('linked-task', project.taskId);
+                    }, 50);
+                }
+            }, 50);
+        } else {
+            // If no ideas selected, ensure tasks grid is in initial state
+            setTimeout(() => {
+                this.initializeProjectTasksGrid();
+            }, 50);
         }
+        
         if (project.eventId) {
             this.setSelectedValues('linked-event', project.eventId);
-        }
-        if (project.taskId) {
-            this.setSelectedValues('linked-task', project.taskId);
         }
 
         // Populate keywords
@@ -772,6 +896,11 @@ class TemplateManager {
     }
 
     getSelectedValues(elementId) {
+        // Special handling for task grid
+        if (elementId === 'linked-task') {
+            return this.getSelectedTaskIds();
+        }
+        
         const element = document.getElementById(elementId);
         if (!element) return [];
         
@@ -785,6 +914,12 @@ class TemplateManager {
     }
 
     setSelectedValues(elementId, values) {
+        // Special handling for task grid
+        if (elementId === 'linked-task') {
+            this.setSelectedTaskIds(values);
+            return;
+        }
+        
         const element = document.getElementById(elementId);
         if (!element || !Array.isArray(values)) return;
         
@@ -797,6 +932,13 @@ class TemplateManager {
             // Single select element - use first value
             element.value = values.length > 0 ? values[0] : '';
         }
+    }
+
+    setSelectedTaskIds(taskIds) {
+        const checkboxes = document.querySelectorAll('#project-tasks-grid-body .task-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = taskIds.includes(checkbox.value);
+        });
     }
 }
 

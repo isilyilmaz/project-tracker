@@ -31,7 +31,7 @@ class TaskGrid {
             id: window.idGenerator.generateId('task'),
             name: '',
             dueDate: '',
-            doneStatus: 'pending',
+            doneStatus: 'ready_to_analyze',
             notes: '',
             subtaskIds: [], // New schema field
             isNew: true
@@ -184,10 +184,14 @@ class TaskGrid {
                     </div>
                     <div class="grid-cell">
                         <select class="task-edit-select task-status-select">
-                            <option value="pending" ${task.doneStatus === 'pending' ? 'selected' : ''}>Pending</option>
-                            <option value="incomplete" ${task.doneStatus === 'incomplete' ? 'selected' : ''}>Incomplete</option>
-                            <option value="complete" ${task.doneStatus === 'complete' ? 'selected' : ''}>Complete</option>
-                            <option value="overdue" ${task.doneStatus === 'overdue' ? 'selected' : ''}>Overdue</option>
+                            <option value="ready_to_analyze" ${task.doneStatus === 'ready_to_analyze' ? 'selected' : ''}>Ready to Analyze</option>
+                            <option value="complete_analyze" ${task.doneStatus === 'complete_analyze' ? 'selected' : ''}>Complete Analyze</option>
+                            <option value="ready_to_development" ${task.doneStatus === 'ready_to_development' ? 'selected' : ''}>Ready to Development</option>
+                            <option value="complete_development" ${task.doneStatus === 'complete_development' ? 'selected' : ''}>Complete Development</option>
+                            <option value="ready_to_test" ${task.doneStatus === 'ready_to_test' ? 'selected' : ''}>Ready to Test</option>
+                            <option value="test_done" ${task.doneStatus === 'test_done' ? 'selected' : ''}>Test Done</option>
+                            <option value="ready_to_production" ${task.doneStatus === 'ready_to_production' ? 'selected' : ''}>Ready to Production</option>
+                            <option value="production_done" ${task.doneStatus === 'production_done' ? 'selected' : ''}>Production Done</option>
                         </select>
                     </div>
                     <div class="grid-cell">
@@ -224,6 +228,9 @@ class TaskGrid {
                     </div>
                     <div class="grid-cell task-cell-actions">
                         <div class="task-actions">
+                            <button class="btn-icon btn-view" onclick="window.navigateToPage('task-detail', {taskId: '${task.id}'})" title="View Details">
+                                👁️
+                            </button>
                             <button class="btn-icon btn-edit" onclick="window.taskGrid.editTask('${task.id}')" title="Edit">
                                 ✏️
                             </button>
@@ -239,10 +246,19 @@ class TaskGrid {
 
     getStatusDisplay(status) {
         const statusMap = {
-            complete: 'Complete',
-            overdue: 'Overdue', 
-            pending: 'Pending',
-            incomplete: 'Incomplete'
+            'ready_to_analyze': 'Ready to Analyze',
+            'complete_analyze': 'Complete Analyze',
+            'ready_to_development': 'Ready to Development', 
+            'complete_development': 'Complete Development',
+            'ready_to_test': 'Ready to Test',
+            'test_done': 'Test Done',
+            'ready_to_production': 'Ready to Production',
+            'production_done': 'Production Done',
+            // Legacy statuses for backward compatibility
+            'complete': 'Complete',
+            'overdue': 'Overdue', 
+            'pending': 'Pending',
+            'incomplete': 'Incomplete'
         };
         return statusMap[status] || status;
     }

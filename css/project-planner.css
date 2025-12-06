@@ -260,3 +260,162 @@
         font-size: 1.5rem;
     }
 }
+
+/* Project Tasks Grid Styles */
+.project-tasks-grid-container {
+    margin-top: 0.5rem;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+}
+
+.project-tasks-grid {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.tasks-grid-header {
+    display: grid;
+    grid-template-columns: 80px 1fr 150px 120px;
+    gap: 1px;
+    background-color: var(--wilderness-sage);
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.tasks-grid-header .grid-cell {
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.tasks-grid-body {
+    background-color: white;
+    min-height: 120px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.task-grid-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 150px 120px;
+    gap: 1px;
+    border-bottom: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.task-grid-row:hover {
+    background-color: #f8f9fa;
+}
+
+.task-grid-row .grid-cell {
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #e9ecef;
+}
+
+.task-grid-row .grid-cell:last-child {
+    border-right: none;
+}
+
+.task-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.task-name {
+    font-weight: 500;
+    color: var(--wilderness-pine);
+}
+
+.task-status .status-badge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.status-badge.status-ready-to-analyze {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-badge.status-complete-analyze {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+}
+
+.status-badge.status-ready-to-development {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+
+.status-badge.status-complete-development {
+    background-color: #e8f5e8;
+    color: #388e3c;
+}
+
+.status-badge.status-ready-to-test {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.status-badge.status-test-done {
+    background-color: #e8f5e8;
+    color: #4caf50;
+}
+
+.status-badge.status-ready-to-production {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.status-badge.status-production-done {
+    background-color: #e8f5e8;
+    color: #1b5e20;
+}
+
+.task-due-date {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.empty-tasks-message {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.empty-tasks-message p {
+    margin: 0;
+}
+
+/* Responsive design for task grid */
+@media (max-width: 768px) {
+    .tasks-grid-header,
+    .task-grid-row {
+        grid-template-columns: 60px 1fr 100px;
+        font-size: 0.85rem;
+    }
+    
+    .tasks-grid-header .grid-cell:last-child,
+    .task-grid-row .grid-cell:last-child {
+        display: none;
+    }
+    
+    .task-checkbox {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .status-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+}

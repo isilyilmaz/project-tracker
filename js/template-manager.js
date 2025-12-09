@@ -127,6 +127,9 @@ class TemplateManager {
         // Load dropdown options
         this.loadProjectDropdowns();
         
+        // Initialize click outside handler for dropdowns
+        this.initializeDropdownOutsideClick();
+        
         // Bind form submission
         const form = document.getElementById('project-planner-form');
         if (form) {
@@ -135,6 +138,20 @@ class TemplateManager {
                 this.handleProjectSubmission(form);
             });
         }
+    }
+
+    initializeDropdownOutsideClick() {
+        document.addEventListener('click', (event) => {
+            const isDropdownClick = event.target.closest('.custom-dropdown');
+            if (!isDropdownClick) {
+                // Close all dropdowns
+                const allDropdowns = document.querySelectorAll('.dropdown-content');
+                const allTriggers = document.querySelectorAll('.dropdown-trigger');
+                
+                allDropdowns.forEach(dd => dd.classList.remove('active'));
+                allTriggers.forEach(trigger => trigger.classList.remove('active'));
+            }
+        });
     }
 
     initializeIdeaPlanner() {
@@ -312,41 +329,18 @@ class TemplateManager {
 
     async loadProjectDropdowns() {
         try {
-            // Store reference to ideas and tasks data for filtering
+            // Store reference to ideas, events and tasks data for filtering
             this.allIdeas = await window.dataManager.getAllIdeas();
+            this.allEvents = await window.dataManager.getAllEvents();
             this.allTasks = await window.dataManager.getAllTasks();
             
-            // Load ideas for multi-select dropdown
-            const ideaSelect = document.getElementById('linked-idea');
-            if (ideaSelect) {
-                ideaSelect.multiple = true;
-                ideaSelect.innerHTML = '';
-                this.allIdeas.forEach(idea => {
-                    const option = document.createElement('option');
-                    option.value = idea.id;
-                    option.textContent = idea.name;
-                    ideaSelect.appendChild(option);
-                });
-                
-                // Add event listener for idea selection changes
-                ideaSelect.addEventListener('change', () => {
-                    this.renderProjectTasksGrid();
-                });
-            }
-
-            // Load events for multi-select dropdown
-            const events = await window.dataManager.getAllEvents();
-            const eventSelect = document.getElementById('linked-event');
-            if (eventSelect) {
-                eventSelect.multiple = true;
-                eventSelect.innerHTML = '';
-                events.forEach(event => {
-                    const option = document.createElement('option');
-                    option.value = event.id;
-                    option.textContent = event.name;
-                    eventSelect.appendChild(option);
-                });
-            }
+            // Initialize selected arrays
+            this.selectedIdeas = this.selectedIdeas || [];
+            this.selectedEvents = this.selectedEvents || [];
+            
+            // Load enhanced dropdowns
+            this.loadIdeasDropdown();
+            this.loadEventsDropdown();
 
             // Initialize tasks grid (initially empty with helper text)
             this.initializeProjectTasksGrid();
@@ -367,25 +361,246 @@ class TemplateManager {
         }
     }
 
+    loadIdeasDropdown() {
+        const optionsContainer = document.getElementById('ideas-options');
+        if (!optionsContainer || !this.allIdeas) return;
+        
+        this.selectedIdeas = this.selectedIdeas || [];
+        optionsContainer.innerHTML = '';
+        
+        if (this.allIdeas.length === 0) {
+            optionsContainer.innerHTML = '<div class="dropdown-option-empty">No ideas available</div>';
+            return;
+        }
+        
+        this.allIdeas.forEach(idea => {
+            const isSelected = this.selectedIdeas.some(selected => selected.id === idea.id);
+            
+            const optionElement = document.createElement('div');
+            optionElement.className = `dropdown-option ${isSelected ? 'selected' : ''}`;
+            optionElement.onclick = () => this.toggleItemSelection('ideas', idea);
+            
+            optionElement.innerHTML = `
+                <div class="dropdown-option-info">
+                    <div class="dropdown-option-name">${idea.name}</div>
+                    <div class="dropdown-option-meta">
+                        Due: ${idea.planDueDate ? new Date(idea.planDueDate).toLocaleDateString() : 'No date'}
+                        ${idea.keywords && idea.keywords.length > 0 ? ` • ${idea.keywords.length} keywords` : ''}
+                    </div>
+                </div>
+                ${isSelected ? '<span class="dropdown-option-check">✓</span>' : ''}
+            `;
+            
+            optionsContainer.appendChild(optionElement);
+        });
+    }
+
+    loadEventsDropdown() {
+        const optionsContainer = document.getElementById('events-options');
+        if (!optionsContainer || !this.allEvents) return;
+        
+        this.selectedEvents = this.selectedEvents || [];
+        optionsContainer.innerHTML = '';
+        
+        if (this.allEvents.length === 0) {
+            optionsContainer.innerHTML = '<div class="dropdown-option-empty">No events available</div>';
+            return;
+        }
+        
+        this.allEvents.forEach(event => {
+            const isSelected = this.selectedEvents.some(selected => selected.id === event.id);
+            
+            const optionElement = document.createElement('div');
+            optionElement.className = `dropdown-option ${isSelected ? 'selected' : ''}`;
+            optionElement.onclick = () => this.toggleItemSelection('events', event);
+            
+            optionElement.innerHTML = `
+                <div class="dropdown-option-info">
+                    <div class="dropdown-option-name">${event.name}</div>
+                    <div class="dropdown-option-meta">
+                        ${event.eventDate ? new Date(event.eventDate).toLocaleDateString() : 'No date'}
+                        • ${event.type || 'No type'} • ${event.status || 'No status'}
+                    </div>
+                </div>
+                ${isSelected ? '<span class="dropdown-option-check">✓</span>' : ''}
+            `;
+            
+            optionsContainer.appendChild(optionElement);
+        });
+    }
+
+    toggleItemSelection(type, item) {
+        if (type === 'ideas') {
+            const index = this.selectedIdeas.findIndex(selected => selected.id === item.id);
+            if (index >= 0) {
+                this.selectedIdeas.splice(index, 1);
+            } else {
+                this.selectedIdeas.push(item);
+            }
+            this.loadIdeasDropdown();
+            this.updateSelectedDisplay('ideas');
+            this.updateSelectedInputs('ideas');
+            this.renderProjectTasksGrid();
+        } else if (type === 'events') {
+            const index = this.selectedEvents.findIndex(selected => selected.id === item.id);
+            if (index >= 0) {
+                this.selectedEvents.splice(index, 1);
+            } else {
+                this.selectedEvents.push(item);
+            }
+            this.loadEventsDropdown();
+            this.updateSelectedDisplay('events');
+            this.updateSelectedInputs('events');
+        }
+    }
+
+    updateSelectedDisplay(type) {
+        const displayContainer = document.getElementById(`selected-${type}-display`);
+        if (!displayContainer) return;
+        
+        const selectedItems = type === 'ideas' ? this.selectedIdeas : this.selectedEvents;
+        
+        if (selectedItems.length === 0) {
+            displayContainer.innerHTML = `
+                <div class="selected-items-empty">
+                    No ${type} selected
+                </div>
+            `;
+            return;
+        }
+        
+        displayContainer.innerHTML = selectedItems.map(item => this.renderSelectedItemCard(type, item)).join('');
+    }
+
+    renderSelectedItemCard(type, item) {
+        if (type === 'ideas') {
+            return `
+                <div class="selected-item-card" data-id="${item.id}">
+                    <div class="selected-item-header">
+                        <div>
+                            <div class="selected-item-name">${item.name}</div>
+                            <div class="selected-item-meta">Due: ${item.planDueDate ? new Date(item.planDueDate).toLocaleDateString() : 'No date'}</div>
+                        </div>
+                        <button class="selected-item-remove" onclick="window.templateManager.removeSelectedItem('ideas', '${item.id}')">×</button>
+                    </div>
+                    <div class="selected-item-details">
+                        ${item.goals ? `<div><strong>Goals:</strong> ${item.goals}</div>` : ''}
+                        ${item.objectives ? `<div><strong>Objectives:</strong> ${item.objectives}</div>` : ''}
+                        ${item.keywords && item.keywords.length > 0 ? `
+                            <div class="selected-item-keywords">
+                                ${item.keywords.map(keyword => `<span class="selected-item-keyword">${keyword}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="selected-item-card" data-id="${item.id}">
+                    <div class="selected-item-header">
+                        <div>
+                            <div class="selected-item-name">${item.name}</div>
+                            <div class="selected-item-meta">
+                                ${item.eventDate ? new Date(item.eventDate).toLocaleDateString() : 'No date'}
+                                • ${item.type || 'No type'}
+                            </div>
+                        </div>
+                        <button class="selected-item-remove" onclick="window.templateManager.removeSelectedItem('events', '${item.id}')">×</button>
+                    </div>
+                    <div class="selected-item-details">
+                        ${item.location ? `<div><strong>Location:</strong> ${item.location}</div>` : ''}
+                        ${item.description ? `<div><strong>Description:</strong> ${item.description}</div>` : ''}
+                        <span class="selected-item-status status-${item.status || 'scheduled'}">${item.status || 'scheduled'}</span>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    removeSelectedItem(type, itemId) {
+        if (type === 'ideas') {
+            this.selectedIdeas = this.selectedIdeas.filter(item => item.id !== itemId);
+            this.loadIdeasDropdown();
+            this.updateSelectedDisplay('ideas');
+            this.updateSelectedInputs('ideas');
+            this.renderProjectTasksGrid();
+        } else if (type === 'events') {
+            this.selectedEvents = this.selectedEvents.filter(item => item.id !== itemId);
+            this.loadEventsDropdown();
+            this.updateSelectedDisplay('events');
+            this.updateSelectedInputs('events');
+        }
+    }
+
+    updateSelectedInputs(type) {
+        const input = document.getElementById(`selected-${type}-input`);
+        if (!input) return;
+        
+        const selectedItems = type === 'ideas' ? this.selectedIdeas : this.selectedEvents;
+        const ids = selectedItems.map(item => item.id);
+        input.value = ids.join(',');
+    }
+
+    createTaskRow(task) {
+        const row = document.createElement('div');
+        row.className = 'task-grid-row';
+        row.setAttribute('data-task-id', task.id);
+        
+        // Format due date
+        const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date';
+        
+        // Create status badge
+        const statusClass = `status-${task.doneStatus?.replace(/_/g, '-') || 'unknown'}`;
+        const statusText = task.doneStatus?.replace(/_/g, ' ') || 'Unknown';
+        
+        row.innerHTML = `
+            <div class="grid-cell">
+                <input type="checkbox" class="task-checkbox" name="linked-task" value="${task.id}">
+            </div>
+            <div class="grid-cell">
+                <div class="task-name">${task.name}</div>
+            </div>
+            <div class="grid-cell">
+                <div class="task-status">
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+            </div>
+            <div class="grid-cell">
+                <div class="task-due-date">${dueDate}</div>
+            </div>
+        `;
+        
+        // Add double-click handler for task detail
+        row.addEventListener('dblclick', () => {
+            if (window.templateManager && typeof window.templateManager.openTaskDetail === 'function') {
+                window.templateManager.openTaskDetail(task.id);
+            }
+        });
+        
+        return row;
+    }
+
     renderProjectTasksGrid() {
-        const ideaSelect = document.getElementById('linked-idea');
         const gridBody = document.getElementById('project-tasks-grid-body');
         
-        if (!ideaSelect || !gridBody || !this.allIdeas || !this.allTasks) {
+        if (!gridBody || !this.allTasks) {
             return;
         }
 
-        // Get selected idea IDs
-        const selectedIdeaIds = Array.from(ideaSelect.selectedOptions).map(option => option.value);
+        // Get selected idea IDs from our enhanced dropdown
+        const selectedIdeaIds = this.selectedIdeas ? this.selectedIdeas.map(idea => idea.id) : [];
         
         // Store currently selected task IDs to preserve them
         const currentlySelectedTaskIds = this.getSelectedTaskIds();
         
-        if (selectedIdeaIds.length === 0) {
-            // No ideas selected, show helper text
+        // Also include any pre-existing task IDs from project being edited
+        const existingTaskIds = window.currentEditProject?.taskId || [];
+        
+        if (selectedIdeaIds.length === 0 && existingTaskIds.length === 0) {
+            // No ideas selected and no existing tasks, show helper text
             gridBody.innerHTML = `
                 <div class="empty-tasks-message">
-                    <p>Select ideas first to see related tasks</p>
+                    <p>Select ideas above to see related tasks</p>
                 </div>
             `;
             return;
@@ -393,12 +608,19 @@ class TemplateManager {
         
         // Find all tasks that belong to the selected ideas
         const relevantTaskIds = new Set();
-        selectedIdeaIds.forEach(ideaId => {
-            const idea = this.allIdeas.find(i => i.id === ideaId);
-            if (idea && idea.taskIds) {
-                idea.taskIds.forEach(taskId => relevantTaskIds.add(taskId));
-            }
-        });
+        
+        // Add tasks from selected ideas
+        if (this.allIdeas) {
+            selectedIdeaIds.forEach(ideaId => {
+                const idea = this.allIdeas.find(i => i.id === ideaId);
+                if (idea && idea.taskIds) {
+                    idea.taskIds.forEach(taskId => relevantTaskIds.add(taskId));
+                }
+            });
+        }
+        
+        // Add any existing project task IDs
+        existingTaskIds.forEach(taskId => relevantTaskIds.add(taskId));
         
         // Filter tasks
         const relevantTasks = this.allTasks.filter(task => relevantTaskIds.has(task.id));
@@ -406,43 +628,37 @@ class TemplateManager {
         if (relevantTasks.length === 0) {
             gridBody.innerHTML = `
                 <div class="empty-tasks-message">
-                    <p>Selected ideas have no associated tasks</p>
+                    <p>No tasks found for selected ideas</p>
                 </div>
             `;
             return;
         }
         
-        // Render tasks in grid
-        const tasksHTML = relevantTasks.map(task => {
-            const isSelected = currentlySelectedTaskIds.includes(task.id);
-            const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-';
-            const statusClass = task.doneStatus.replace(/_/g, '-');
-            
-            return `
-                <div class="task-grid-row" data-task-id="${task.id}" ondblclick="window.templateManager.openTaskDetail('${task.id}')">
-                    <div class="grid-cell">
-                        <input type="checkbox" 
-                               class="task-checkbox" 
-                               value="${task.id}" 
-                               ${isSelected ? 'checked' : ''}
-                               onclick="event.stopPropagation()">
-                    </div>
-                    <div class="grid-cell task-name">
-                        ${task.name}
-                    </div>
-                    <div class="grid-cell task-status">
-                        <span class="status-badge status-${statusClass}">
-                            ${this.getStatusDisplay(task.doneStatus)}
-                        </span>
-                    </div>
-                    <div class="grid-cell task-due-date">
-                        ${dueDate}
-                    </div>
-                </div>
-            `;
-        }).join('');
+        // Clear grid and add tasks
+        gridBody.innerHTML = '';
+        relevantTasks.forEach(task => {
+            const row = this.createTaskRow(task);
+            gridBody.appendChild(row);
+        });
         
-        gridBody.innerHTML = tasksHTML;
+        // Restore previously selected task checkboxes
+        setTimeout(() => {
+            currentlySelectedTaskIds.forEach(taskId => {
+                const checkbox = gridBody.querySelector(`input[value="${taskId}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+            
+            // Also check any existing project task IDs
+            const existingTaskIds = window.currentEditProject?.taskId || [];
+            existingTaskIds.forEach(taskId => {
+                const checkbox = gridBody.querySelector(`input[value="${taskId}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        }, 10);
     }
 
     getStatusDisplay(status) {
@@ -465,7 +681,11 @@ class TemplateManager {
     }
 
     openTaskDetail(taskId) {
-        window.navigateToPage('task-detail', { taskId: taskId });
+        // Pass context about the source page for better back navigation
+        window.navigateToPage('task-detail', { 
+            taskId: taskId, 
+            sourcePage: 'project-planner' 
+        });
     }
 
     async handleProjectSubmission(form) {
@@ -473,10 +693,13 @@ class TemplateManager {
             const formData = new FormData(form);
             const isEditMode = window.currentEditMode === 'edit' && window.currentEditProject;
             
-            // Convert single selections to arrays for new schema
-            const selectedIdeaIds = this.getSelectedValues('linked-idea');
-            const selectedEventIds = this.getSelectedValues('linked-event'); 
-            const selectedTaskIds = this.getSelectedValues('linked-task');
+            // Get selected items from hidden inputs
+            const selectedIdeaIds = formData.get('ideaId')?.split(',').filter(id => id.trim()) || [];
+            const selectedEventIds = formData.get('eventId')?.split(',').filter(id => id.trim()) || []; 
+            
+            // Get selected task IDs from checkboxes
+            const selectedTaskIds = Array.from(document.querySelectorAll('input[name="linked-task"]:checked'))
+                .map(checkbox => checkbox.value);
             
             // Project data structure
             const now = new Date().toISOString();
@@ -712,30 +935,10 @@ class TemplateManager {
             }
         });
 
-        // Populate array fields (ideaId, eventId, taskId)
-        // Set ideas first
-        if (project.ideaId) {
-            this.setSelectedValues('linked-idea', project.ideaId);
-            // Trigger task grid rendering after idea selection
-            setTimeout(() => {
-                this.renderProjectTasksGrid();
-                // Then set task selections after grid rendering
-                if (project.taskId) {
-                    setTimeout(() => {
-                        this.setSelectedValues('linked-task', project.taskId);
-                    }, 50);
-                }
-            }, 50);
-        } else {
-            // If no ideas selected, ensure tasks grid is in initial state
-            setTimeout(() => {
-                this.initializeProjectTasksGrid();
-            }, 50);
-        }
-        
-        if (project.eventId) {
-            this.setSelectedValues('linked-event', project.eventId);
-        }
+        // Load project data into enhanced dropdowns
+        setTimeout(() => {
+            this.loadExistingProjectData(project);
+        }, 100);
 
         // Populate keywords
         if (project.keywords && project.keywords.length > 0) {
@@ -940,9 +1143,141 @@ class TemplateManager {
             checkbox.checked = taskIds.includes(checkbox.value);
         });
     }
+
+    toggleDropdown(type) {
+        const dropdown = document.getElementById(`${type}-dropdown`);
+        const content = document.getElementById(`${type}-dropdown-content`);
+        const trigger = dropdown?.querySelector('.dropdown-trigger');
+        
+        if (!dropdown || !content || !trigger) return;
+        
+        // Close other dropdowns first
+        const allDropdowns = document.querySelectorAll('.dropdown-content');
+        const allTriggers = document.querySelectorAll('.dropdown-trigger');
+        
+        allDropdowns.forEach(dd => {
+            if (dd.id !== `${type}-dropdown-content`) {
+                dd.classList.remove('active');
+            }
+        });
+        
+        allTriggers.forEach(trig => {
+            if (trig !== trigger) {
+                trig.classList.remove('active');
+            }
+        });
+        
+        // Toggle current dropdown
+        const isActive = content.classList.contains('active');
+        
+        if (isActive) {
+            content.classList.remove('active');
+            trigger.classList.remove('active');
+        } else {
+            content.classList.add('active');
+            trigger.classList.add('active');
+        }
+    }
+
+    filterDropdownOptions(type, searchValue) {
+        const optionsContainer = document.getElementById(`${type}-options`);
+        if (!optionsContainer) return;
+        
+        const options = optionsContainer.querySelectorAll('.dropdown-option');
+        const search = searchValue.toLowerCase().trim();
+        
+        options.forEach(option => {
+            const name = option.querySelector('.dropdown-option-name')?.textContent.toLowerCase() || '';
+            const meta = option.querySelector('.dropdown-option-meta')?.textContent.toLowerCase() || '';
+            
+            if (name.includes(search) || meta.includes(search)) {
+                option.style.display = 'flex';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+    }
+
+    removeSelectedItem(type, itemId) {
+        const selectedArray = type === 'ideas' ? 'selectedIdeas' : 'selectedEvents';
+        
+        if (!this[selectedArray]) {
+            this[selectedArray] = [];
+        }
+        
+        // Remove from selected array
+        this[selectedArray] = this[selectedArray].filter(item => item.id !== itemId);
+        
+        // Update display
+        this.updateSelectedDisplay(type);
+        
+        // Update hidden input
+        const hiddenInput = document.getElementById(`selected-${type}-input`);
+        if (hiddenInput) {
+            const selectedIds = this[selectedArray].map(item => item.id);
+            hiddenInput.value = selectedIds.join(',');
+        }
+        
+        // Update dropdown option state
+        const option = document.querySelector(`#${type}-options .dropdown-option[data-item-id="${itemId}"]`);
+        if (option) {
+            option.classList.remove('selected');
+            const checkmark = option.querySelector('.dropdown-option-check');
+            if (checkmark) {
+                checkmark.style.display = 'none';
+            }
+        }
+        
+        // Re-render tasks grid if this is ideas
+        if (type === 'ideas') {
+            this.renderProjectTasksGrid();
+        }
+    }
+
+    loadExistingProjectData(project) {
+        if (!project) return;
+        
+        // Load existing idea selections
+        if (project.ideaId && project.ideaId.length > 0 && this.allIdeas) {
+            this.selectedIdeas = project.ideaId.map(ideaId => 
+                this.allIdeas.find(idea => idea.id === ideaId)
+            ).filter(Boolean);
+            
+            this.loadIdeasDropdown();
+            this.updateSelectedDisplay('ideas');
+            this.updateSelectedInputs('ideas');
+        }
+        
+        // Load existing event selections
+        if (project.eventId && project.eventId.length > 0 && this.allEvents) {
+            this.selectedEvents = project.eventId.map(eventId => 
+                this.allEvents.find(event => event.id === eventId)
+            ).filter(Boolean);
+            
+            this.loadEventsDropdown();
+            this.updateSelectedDisplay('events');
+            this.updateSelectedInputs('events');
+        }
+        
+        // Re-render task grid with existing data
+        this.renderProjectTasksGrid();
+    }
 }
 
 // Initialize template manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Global dropdown functions
+    window.toggleDropdown = (type) => {
+        if (window.templateManager) {
+            window.templateManager.toggleDropdown(type);
+        }
+    };
+
+    window.filterDropdownOptions = (type, searchValue) => {
+        if (window.templateManager) {
+            window.templateManager.filterDropdownOptions(type, searchValue);
+        }
+    };
+
     window.templateManager = new TemplateManager();
 });

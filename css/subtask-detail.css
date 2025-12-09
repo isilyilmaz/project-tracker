@@ -385,29 +385,38 @@
 
 .btn-primary {
     background-color: var(--wilderness-pine);
-    color: white;
+    color: var(--wilderness-white);
+    border: 2px solid var(--wilderness-pine);
 }
 
 .btn-primary:hover {
     background-color: var(--wilderness-charcoal);
+    color: var(--wilderness-white);
+    border-color: var(--wilderness-charcoal);
 }
 
 .btn-secondary {
     background-color: var(--wilderness-sage);
-    color: white;
+    color: var(--wilderness-charcoal);
+    border: 2px solid var(--wilderness-sage);
 }
 
 .btn-secondary:hover {
     background-color: var(--wilderness-pine);
+    color: var(--wilderness-white);
+    border-color: var(--wilderness-pine);
 }
 
 .btn-danger {
     background-color: #dc3545;
-    color: white;
+    color: var(--wilderness-white);
+    border: 2px solid #dc3545;
 }
 
 .btn-danger:hover {
     background-color: #c82333;
+    color: var(--wilderness-white);
+    border-color: #c82333;
 }
 
 .btn-icon {

@@ -529,9 +529,6 @@ class DataManager {
     }
 
     async saveSubtask(subtaskData) {
-        // Default to Analyze stage if not specified
-        subtaskData.taskType = subtaskData.taskType || 'Analyze';
-        
         // Add timestamps
         const now = new Date().toISOString();
         subtaskData.createdAt = subtaskData.createdAt || now;
@@ -541,14 +538,6 @@ class DataManager {
     }
 
     async updateSubtask(id, subtaskData) {
-        // Validate lifecycle progression
-        if (subtaskData.taskType) {
-            const currentSubtask = await this.getSubtask(id);
-            if (currentSubtask) {
-                this.validateSubtaskProgression(currentSubtask.taskType, subtaskData.taskType);
-            }
-        }
-        
         return await this.updateData('subtasks', id, subtaskData);
     }
 

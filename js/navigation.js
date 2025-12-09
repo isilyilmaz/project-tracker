@@ -1,6 +1,8 @@
 class Navigation {
     constructor() {
         this.currentPage = 'home';
+        this.previousPage = null;
+        this.navigationContext = {};
         this.contentArea = null;
         this.navLinks = null;
         this.initialized = false;
@@ -48,6 +50,13 @@ class Navigation {
         }
         
         if (this.currentPage !== page || Object.keys(params).length > 0) {
+            // Store previous page context for back navigation
+            this.previousPage = this.currentPage;
+            this.navigationContext = {
+                fromPage: this.currentPage,
+                timestamp: Date.now(),
+                ...params
+            };
             this.updateActiveLink(page);
             this.loadPage(page, params);
             this.currentPage = page;
@@ -63,6 +72,40 @@ class Navigation {
                 }
             });
         }
+    }
+
+    navigateBack() {
+        // Intelligent back navigation with context awareness
+        if (this.previousPage && this.navigationContext.fromPage) {
+            // We know where we came from, navigate back there
+            this.navigateTo(this.previousPage);
+        } else {
+            // Fallback to browser history
+            try {
+                window.history.back();
+            } catch (error) {
+                console.warn('Browser back navigation failed, defaulting to home');
+                this.navigateTo('home');
+            }
+        }
+    }
+
+    getBackButtonText() {
+        // Return context-aware back button text
+        const pageNames = {
+            'home': 'Home',
+            'project-planner': 'Project Planner',
+            'task-manager': 'Task Manager',
+            'all-projects': 'All Projects',
+            'all-ideas': 'All Ideas',
+            'all-events': 'All Events'
+        };
+        
+        if (this.previousPage && pageNames[this.previousPage]) {
+            return `← Back to ${pageNames[this.previousPage]}`;
+        }
+        
+        return '← Back';
     }
 
     async loadPage(page, params = {}) {
@@ -124,6 +167,11 @@ class Navigation {
             case 'subtask-detail':
                 if (window.subtaskDetailManager && params.subtaskId && params.taskId) {
                     window.subtaskDetailManager.init(params.subtaskId, params.taskId);
+                }
+                break;
+            case 'task-manager':
+                if (window.taskManager) {
+                    window.taskManager.init();
                 }
                 break;
         }
@@ -302,7 +350,7 @@ class Navigation {
         const dashboardStats = document.getElementById('dashboard-stats');
         if (!dashboardStats) return;
 
-        const completedTasks = tasks.filter(task => task.doneStatus === 'complete').length;
+        const completedTasks = tasks.filter(task => task.doneStatus === 'production_done').length;
         const overdueTasks = tasks.filter(task => task.doneStatus === 'overdue').length;
         
         dashboardStats.innerHTML = `
@@ -353,7 +401,7 @@ class Navigation {
 
         const ideasHTML = ideas.map(idea => {
             const ideaTasks = allTasks.filter(task => idea.taskIds && idea.taskIds.includes(task.id));
-            const completedTasks = ideaTasks.filter(task => task.doneStatus === 'complete').length;
+            const completedTasks = ideaTasks.filter(task => task.doneStatus === 'production_done').length;
             const overdueTasks = ideaTasks.filter(task => task.doneStatus === 'overdue').length;
             const pendingTasks = ideaTasks.filter(task => task.doneStatus === 'pending').length;
             
@@ -428,13 +476,13 @@ class Navigation {
         const relevantTasks = allTasks.filter(task => 
             ideas.some(idea => idea.taskIds && idea.taskIds.includes(task.id))
         );
-        const completedTasks = relevantTasks.filter(task => task.doneStatus === 'complete').length;
+        const completedTasks = relevantTasks.filter(task => task.doneStatus === 'production_done').length;
         
         let completedIdeas = 0;
         ideas.forEach(idea => {
             if (idea.taskIds && idea.taskIds.length > 0) {
                 const ideaTasks = allTasks.filter(task => idea.taskIds.includes(task.id));
-                const completed = ideaTasks.filter(task => task.doneStatus === 'complete').length;
+                const completed = ideaTasks.filter(task => task.doneStatus === 'production_done').length;
                 if (completed === ideaTasks.length && ideaTasks.length > 0) {
                     completedIdeas++;
                 }
@@ -788,6 +836,24 @@ window.navigateToPage = function(page, params = {}) {
         console.warn('Navigation not ready, retrying in 100ms...');
         setTimeout(() => window.navigateToPage(page, params), 100);
     }
+};
+
+// Global function for intelligent back navigation
+window.navigateBack = function() {
+    if (window.navigation && typeof window.navigation.navigateBack === 'function') {
+        window.navigation.navigateBack();
+    } else {
+        console.warn('Navigation not ready, falling back to history.back()');
+        window.history.back();
+    }
+};
+
+// Global function to get context-aware back button text
+window.getBackButtonText = function() {
+    if (window.navigation && typeof window.navigation.getBackButtonText === 'function') {
+        return window.navigation.getBackButtonText();
+    }
+    return '← Back';
 };
 
 // Safe wrapper for template manager calls

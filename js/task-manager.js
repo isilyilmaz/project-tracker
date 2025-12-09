@@ -21,11 +21,32 @@ class TaskManager {
     }
 
     init() {
-        // Initialize task manager if we're on all-ideas page
-        this.taskManagerContainer = document.getElementById('task-manager-placeholder');
+        // Check if we're on the standalone task-manager page
+        this.taskManagerContainer = document.querySelector('.task-manager-container');
+        
+        // If we have the task manager container, we're on the standalone page
+        if (this.taskManagerContainer) {
+            this.isStandalonePage = true;
+            this.initStandalonePage();
+        } else {
+            // Check for placeholder container (all-ideas page integration)
+            this.taskManagerContainer = document.getElementById('task-manager-placeholder');
+            this.isStandalonePage = false;
+        }
         
         // Bind global event listeners
         this.bindEventListeners();
+    }
+    
+    async initStandalonePage() {
+        try {
+            // Load data and render for standalone page
+            await this.loadData();
+            this.render();
+        } catch (error) {
+            console.error('Error initializing standalone task manager:', error);
+            this.showNotification('Error loading task manager', 'error');
+        }
     }
 
     bindEventListeners() {
@@ -116,6 +137,50 @@ class TaskManager {
 
     async loadData() {
         try {
+            if (this.isStandalonePage) {
+                // For standalone page, load all tasks directly
+                await this.loadAllTasks();
+            } else {
+                // For all-ideas page integration, use filtered approach
+                await this.loadFilteredTasks();
+            }
+        } catch (error) {
+            console.error('Error loading task manager data:', error);
+        }
+    }
+
+    async loadAllTasks() {
+        try {
+            // Load all tasks directly from data manager
+            const allTasks = await window.dataManager.getAllTasks();
+            
+            // Get all subtasks for these tasks
+            const allSubtasks = [];
+            for (const task of allTasks) {
+                if (task.subtaskIds && task.subtaskIds.length > 0) {
+                    const taskSubtasks = await window.dataManager.getSubtasksByIds(task.subtaskIds);
+                    allSubtasks.push(...taskSubtasks);
+                }
+            }
+
+            this.tasksCache = allTasks;
+            this.subtasksCache = allSubtasks;
+
+            // Build assignees cache
+            this.assigneesCache.clear();
+            allSubtasks.forEach(subtask => {
+                if (subtask.assignee && subtask.assignee.trim()) {
+                    this.assigneesCache.add(subtask.assignee.trim());
+                }
+            });
+
+        } catch (error) {
+            console.error('Error loading all tasks:', error);
+        }
+    }
+
+    async loadFilteredTasks() {
+        try {
             // Get current filtered ideas (or all if no filter)
             const currentIdeas = await this.getCurrentIdeas();
             
@@ -149,7 +214,7 @@ class TaskManager {
             });
 
         } catch (error) {
-            console.error('Error loading task manager data:', error);
+            console.error('Error loading filtered tasks:', error);
         }
     }
 
@@ -183,6 +248,11 @@ class TaskManager {
         
         this.updateStats();
         this.populateAssigneeFilter();
+        
+        // Apply any active filters
+        if (this.isStandalonePage) {
+            this.applyFilters();
+        }
     }
 
     renderGridView() {
@@ -223,29 +293,34 @@ class TaskManager {
     }
 
     renderTaskCard(task) {
-        const statusClass = task.doneStatus || 'pending';
+        const statusClass = this.getStatusClass(task.doneStatus);
+        const statusLabel = this.getStatusLabel(task.doneStatus);
         const subtaskCount = task.subtaskIds ? task.subtaskIds.length : 0;
+        const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
         
         return `
-            <div class="task-card" data-task-id="${task.id}">
+            <div class="task-card ${isOverdue ? 'overdue' : ''}" data-task-id="${task.id}">
                 <div class="task-card-header">
                     <div class="task-icon">📋</div>
-                    <div class="task-status status-${statusClass}">${task.doneStatus || 'pending'}</div>
+                    <div class="task-status status-${statusClass}">${statusLabel}</div>
                 </div>
                 <div class="task-card-content">
                     <h5 class="task-name">${task.name}</h5>
                     <div class="task-meta">
-                        <div class="task-due">📅 ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}</div>
+                        <div class="task-due ${isOverdue ? 'overdue' : ''}">
+                            📅 ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
+                            ${isOverdue ? ' ⚠️' : ''}
+                        </div>
                         <div class="task-subtasks">🔧 ${subtaskCount} subtasks</div>
                     </div>
                     ${task.notes ? `<p class="task-notes">${task.notes.substring(0, 100)}${task.notes.length > 100 ? '...' : ''}</p>` : ''}
                 </div>
                 <div class="task-card-actions">
+                    <button class="btn-icon" onclick="window.navigateToPage('task-detail', { taskId: '${task.id}' })" title="View Details">
+                        👁️
+                    </button>
                     <button class="btn-icon" onclick="window.taskManager.editTask('${task.id}')" title="Edit Task">
                         ✏️
-                    </button>
-                    <button class="btn-icon" onclick="window.taskManager.viewTaskSubtasks('${task.id}')" title="View Subtasks">
-                        🔧
                     </button>
                 </div>
             </div>
@@ -567,8 +642,19 @@ class TaskManager {
             'Production': 0
         };
 
+        // Count tasks by stage (derived from status)
+        this.tasksCache.forEach(task => {
+            const stage = this.getStageFromStatus(task.doneStatus);
+            if (stageCounts.hasOwnProperty(stage)) {
+                stageCounts[stage] = (stageCounts[stage] || 0) + 1;
+            }
+        });
+
+        // Also count subtasks by stage if they have taskType
         this.subtasksCache.forEach(subtask => {
-            stageCounts[subtask.taskType] = (stageCounts[subtask.taskType] || 0) + 1;
+            if (subtask.taskType && stageCounts.hasOwnProperty(subtask.taskType)) {
+                stageCounts[subtask.taskType] = (stageCounts[subtask.taskType] || 0) + 1;
+            }
         });
 
         if (analyzeCount) analyzeCount.textContent = stageCounts['Analyze'];
@@ -621,14 +707,101 @@ class TaskManager {
     }
 
     handleSearch(searchTerm) {
-        // Implement search filtering
-        // This would filter the visible items based on the search term
-        console.log('Search:', searchTerm);
+        this.applyFilters();
     }
 
     handleFilterChange() {
-        // Implement filter logic
-        console.log('Filter changed');
+        this.applyFilters();
+    }
+
+    applyFilters() {
+        if (!this.isStandalonePage) return;
+
+        const searchTerm = document.getElementById('tm-search')?.value.toLowerCase() || '';
+        const stageFilter = document.getElementById('tm-stage-filter')?.value || '';
+        const assigneeFilter = document.getElementById('tm-assignee-filter')?.value || '';
+        const taskFilter = document.getElementById('tm-task-filter')?.value || '';
+
+        // Filter tasks
+        let filteredTasks = this.tasksCache.filter(task => {
+            // Search filter
+            const matchesSearch = !searchTerm || 
+                task.name.toLowerCase().includes(searchTerm) ||
+                (task.notes && task.notes.toLowerCase().includes(searchTerm));
+
+            // Stage filter
+            const taskStage = this.getStageFromStatus(task.doneStatus);
+            const matchesStage = !stageFilter || taskStage === stageFilter;
+
+            // Task status filter
+            let matchesTaskStatus = true;
+            if (taskFilter) {
+                switch(taskFilter) {
+                    case 'complete':
+                        matchesTaskStatus = task.doneStatus === 'production_done';
+                        break;
+                    case 'pending':
+                        matchesTaskStatus = task.doneStatus && task.doneStatus !== 'production_done';
+                        break;
+                    case 'overdue':
+                        matchesTaskStatus = task.dueDate && new Date(task.dueDate) < new Date();
+                        break;
+                    case 'incomplete':
+                        matchesTaskStatus = !task.doneStatus || task.doneStatus === 'ready_to_analyze';
+                        break;
+                }
+            }
+
+            return matchesSearch && matchesStage && matchesTaskStatus;
+        });
+
+        // Filter subtasks
+        let filteredSubtasks = this.subtasksCache.filter(subtask => {
+            // Search filter
+            const matchesSearch = !searchTerm || 
+                subtask.name.toLowerCase().includes(searchTerm) ||
+                (subtask.notes && subtask.notes.toLowerCase().includes(searchTerm));
+
+            // Stage filter
+            const matchesStage = !stageFilter || subtask.taskType === stageFilter;
+
+            // Assignee filter
+            const matchesAssignee = !assigneeFilter || 
+                (assigneeFilter === 'unassigned' && !subtask.assignee) ||
+                subtask.assignee === assigneeFilter;
+
+            return matchesSearch && matchesStage && matchesAssignee;
+        });
+
+        // Update display with filtered results
+        this.renderFilteredResults(filteredTasks, filteredSubtasks);
+    }
+
+    renderFilteredResults(tasks, subtasks) {
+        const tasksGrid = document.getElementById('tasks-grid');
+        const subtasksGrid = document.getElementById('subtasks-grid');
+
+        if (tasksGrid) {
+            if (tasks.length === 0) {
+                tasksGrid.innerHTML = '<div class="empty-placeholder">No tasks match your filters</div>';
+            } else {
+                tasksGrid.innerHTML = tasks.map(task => this.renderTaskCard(task)).join('');
+            }
+        }
+
+        if (subtasksGrid) {
+            if (subtasks.length === 0) {
+                subtasksGrid.innerHTML = '<div class="empty-placeholder">No subtasks match your filters</div>';
+            } else {
+                subtasksGrid.innerHTML = subtasks.map(subtask => this.renderSubtaskCard(subtask)).join('');
+            }
+        }
+
+        // Update filtered count
+        const filteredCount = document.getElementById('tm-filtered-count');
+        if (filteredCount) {
+            filteredCount.textContent = `${tasks.length + subtasks.length} shown`;
+        }
     }
 
     showNotification(message, type = 'info') {
@@ -658,6 +831,49 @@ class TaskManager {
                 notification.remove();
             }
         }, 3000);
+    }
+
+    // Status mapping for 8-step workflow
+    getStatusClass(status) {
+        const statusMap = {
+            'ready_to_analyze': 'ready-analyze',
+            'complete_analyze': 'complete-analyze',
+            'ready_to_development': 'ready-development',
+            'complete_development': 'complete-development',
+            'ready_to_test': 'ready-test',
+            'test_done': 'test-done',
+            'ready_to_production': 'ready-production',
+            'production_done': 'production-done'
+        };
+        return statusMap[status] || 'unknown';
+    }
+
+    getStatusLabel(status) {
+        const statusLabels = {
+            'ready_to_analyze': 'Ready to Analyze',
+            'complete_analyze': 'Complete Analyze',
+            'ready_to_development': 'Ready to Development',
+            'complete_development': 'Complete Development',
+            'ready_to_test': 'Ready to Test',
+            'test_done': 'Test Done',
+            'ready_to_production': 'Ready to Production',
+            'production_done': 'Production Done'
+        };
+        return statusLabels[status] || status || 'Unknown';
+    }
+
+    getStageFromStatus(status) {
+        if (!status) return 'Unknown';
+        if (status.includes('analyze')) return 'Analyze';
+        if (status.includes('development')) return 'Development';
+        if (status.includes('test')) return 'Test';
+        if (status.includes('production')) return 'Production';
+        return 'Unknown';
+    }
+
+    editTask(taskId) {
+        // Navigate to task detail page
+        window.navigateToPage('task-detail', { taskId: taskId });
     }
 }
 

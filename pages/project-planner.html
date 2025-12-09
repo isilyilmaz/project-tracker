@@ -45,23 +45,56 @@
         <div class="form-section">
             <h3>Linked Plans</h3>
             <div class="form-grid">
-                <div class="form-group">
-                    <label for="linked-idea" class="form-label">Linked Ideas</label>
-                    <select id="linked-idea" name="ideaId" class="form-select" multiple size="4">
-                        <!-- Options will be loaded dynamically -->
-                    </select>
-                    <small class="form-help">Hold Ctrl/Cmd to select multiple ideas</small>
+                <!-- Linked Ideas Section -->
+                <div class="form-group form-row">
+                    <label class="form-label">Linked Ideas</label>
+                    <div class="enhanced-dropdown-container">
+                        <div class="custom-dropdown" id="ideas-dropdown">
+                            <div class="dropdown-trigger" onclick="window.toggleDropdown('ideas')">
+                                <span class="dropdown-text">Select Ideas...</span>
+                                <span class="dropdown-arrow">▼</span>
+                            </div>
+                            <div class="dropdown-content" id="ideas-dropdown-content">
+                                <div class="dropdown-search">
+                                    <input type="text" placeholder="Search ideas..." id="ideas-search" oninput="window.filterDropdownOptions('ideas', this.value)">
+                                </div>
+                                <div class="dropdown-options" id="ideas-options">
+                                    <!-- Options will be loaded dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="selected-items-display" id="selected-ideas-display">
+                            <!-- Selected ideas cards will appear here -->
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="linked-event" class="form-label">Linked Events</label>
-                    <select id="linked-event" name="eventId" class="form-select" multiple size="4">
-                        <!-- Options will be loaded dynamically -->
-                    </select>
-                    <small class="form-help">Hold Ctrl/Cmd to select multiple events</small>
+                <!-- Linked Events Section -->
+                <div class="form-group form-row">
+                    <label class="form-label">Linked Events</label>
+                    <div class="enhanced-dropdown-container">
+                        <div class="custom-dropdown" id="events-dropdown">
+                            <div class="dropdown-trigger" onclick="window.toggleDropdown('events')">
+                                <span class="dropdown-text">Select Events...</span>
+                                <span class="dropdown-arrow">▼</span>
+                            </div>
+                            <div class="dropdown-content" id="events-dropdown-content">
+                                <div class="dropdown-search">
+                                    <input type="text" placeholder="Search events..." id="events-search" oninput="window.filterDropdownOptions('events', this.value)">
+                                </div>
+                                <div class="dropdown-options" id="events-options">
+                                    <!-- Options will be loaded dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="selected-items-display" id="selected-events-display">
+                            <!-- Selected events cards will appear here -->
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
+                <!-- Related Tasks Section -->
+                <div class="form-group form-row">
                     <label class="form-label">Related Tasks</label>
                     <div class="project-tasks-grid-container">
                         <div class="project-tasks-grid" id="project-tasks-grid">
@@ -79,6 +112,10 @@
                     <small class="form-help">Tasks are filtered based on selected ideas above. Check boxes to link tasks to this project. Double-click a task to view details.</small>
                 </div>
             </div>
+
+            <!-- Hidden inputs for form submission -->
+            <input type="hidden" id="selected-ideas-input" name="ideaId">
+            <input type="hidden" id="selected-events-input" name="eventId">
         </div>
 
         <div class="form-section">

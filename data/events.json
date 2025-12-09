@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "event_001",
+    "name": "My Event",
+    "type": "conference",
+    "eventDate": "2025-12-22T18:42",
+    "duration": 1,
+    "location": "Teams Meeting",
+    "description": "This is the event description.",
+    "status": "scheduled",
+    "createdAt": "2025-12-06T17:43:21.937Z",
+    "updatedAt": "2025-12-06T17:43:21.938Z",
+    "budget": 0,
+    "organizer": "",
+    "resources": [],
+    "agenda": ""
+  }
+]

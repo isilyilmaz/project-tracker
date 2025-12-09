@@ -36,12 +36,22 @@ class TaskDetailManager {
             this.renderTaskDetails();
             this.renderWorkflowStatus();
             await this.renderParentIdea();
+            this.initializeSubtaskGrid();
             await this.loadSubtasks();
             this.bindEvents();
+            this.updateBackButton();
             
         } catch (error) {
             console.error('Error initializing task detail:', error);
             this.showError('Failed to load task details');
+        }
+    }
+
+    updateBackButton() {
+        // Update back button with context-aware text
+        const backBtn = document.getElementById('back-btn');
+        if (backBtn && window.getBackButtonText) {
+            backBtn.textContent = window.getBackButtonText();
         }
     }
 
@@ -166,6 +176,13 @@ class TaskDetailManager {
         document.getElementById('status-selector-modal').style.display = 'none';
     }
 
+    async jumpToStatus(targetStatus) {
+        // Allow jumping to any status directly
+        if (confirm(`Are you sure you want to change the status to "${this.statusLabels[targetStatus] || targetStatus}"?`)) {
+            await this.updateTaskStatus(targetStatus);
+        }
+    }
+
     async nextStatus() {
         if (!this.currentTask) return;
         
@@ -203,55 +220,32 @@ class TaskDetailManager {
         }
     }
 
+    initializeSubtaskGrid() {
+        // Initialize the subtask grid with the current task ID
+        if (window.subtaskGrid) {
+            window.subtaskGrid.initialize('subtasks-task-grid', this.currentTaskId);
+        }
+    }
+
     async loadSubtasks() {
         try {
             const subtaskIds = this.currentTask.subtaskIds || [];
-            const subtasks = await window.dataManager.getSubtasksByIds(subtaskIds);
             
-            this.renderSubtasks(subtasks);
+            // Update subtasks count
+            const subtasksCount = document.getElementById('subtasks-count');
+            if (subtasksCount) {
+                subtasksCount.textContent = `${subtaskIds ? subtaskIds.length : 0} subtasks`;
+            }
+            
+            // Load subtasks using SubtaskGrid
+            if (window.subtaskGrid) {
+                window.subtaskGrid.loadSubtasks(subtaskIds);
+            }
             
         } catch (error) {
             console.error('Error loading subtasks:', error);
             this.showError('Failed to load subtasks');
         }
-    }
-
-    renderSubtasks(subtasks) {
-        const subtasksList = document.getElementById('subtasks-list');
-        const emptySubtasks = document.getElementById('empty-subtasks');
-        
-        if (!subtasks || subtasks.length === 0) {
-            emptySubtasks.style.display = 'block';
-            return;
-        }
-        
-        emptySubtasks.style.display = 'none';
-        
-        const subtasksHTML = subtasks.map(subtask => `
-            <div class="subtask-item" data-subtask-id="${subtask.id}">
-                <div class="subtask-info">
-                    <div class="subtask-name">${subtask.name}</div>
-                    <div class="subtask-meta">
-                        <span class="subtask-status status-${subtask.status}">${subtask.status}</span>
-                        <span class="subtask-date">Created: ${new Date(subtask.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    ${subtask.description ? `<div class="subtask-description">${subtask.description}</div>` : ''}
-                </div>
-                <div class="subtask-actions">
-                    <button class="btn-icon" onclick="window.taskDetailManager.openSubtask('${subtask.id}')" title="View Details">
-                        👁️
-                    </button>
-                    <button class="btn-icon btn-danger" onclick="window.taskDetailManager.deleteSubtask('${subtask.id}')" title="Delete">
-                        🗑️
-                    </button>
-                </div>
-            </div>
-        `).join('');
-        
-        const existingSubtasks = subtasksList.querySelectorAll('.subtask-item');
-        existingSubtasks.forEach(item => item.remove());
-        
-        subtasksList.insertAdjacentHTML('beforeend', subtasksHTML);
     }
 
     createSubtask() {

@@ -4,7 +4,10 @@ class IDGenerator {
             proj: 1,
             idea: 1,
             event: 1,
-            task: 1
+            task: 1,
+            subtask: 1,
+            effort: 1,
+            comment: 1
         };
         this.loadCounters();
     }
@@ -49,7 +52,10 @@ class IDGenerator {
             proj: 1,
             idea: 1,
             event: 1,
-            task: 1
+            task: 1,
+            subtask: 1,
+            effort: 1,
+            comment: 1
         };
         this.saveCounters();
     }

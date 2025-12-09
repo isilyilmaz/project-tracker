@@ -1,6 +1,6 @@
 <div class="task-detail-container">
     <div class="detail-header">
-        <button class="back-btn" onclick="history.back()">
+        <button class="back-btn" id="back-btn" onclick="window.navigateBack()">
             ← Back
         </button>
         <h1 class="task-title" id="task-title">Task Details</h1>
@@ -36,49 +36,49 @@
         <h2>Status Workflow</h2>
         <div class="workflow-progress">
             <div class="workflow-steps">
-                <div class="workflow-step" data-status="ready_to_analyze">
+                <div class="workflow-step clickable-step" data-status="ready_to_analyze" onclick="window.taskDetailManager.jumpToStatus('ready_to_analyze')" title="Click to jump to this status">
                     <div class="step-indicator"></div>
                     <span class="step-label">Ready to Analyze</span>
                 </div>
                 <div class="workflow-connector"></div>
                 
-                <div class="workflow-step" data-status="complete_analyze">
+                <div class="workflow-step clickable-step" data-status="complete_analyze" onclick="window.taskDetailManager.jumpToStatus('complete_analyze')" title="Click to jump to this status">
                     <div class="step-indicator"></div>
                     <span class="step-label">Complete Analyze</span>
                 </div>
                 <div class="workflow-connector"></div>
                 
-                <div class="workflow-step" data-status="ready_to_development">
+                <div class="workflow-step clickable-step" data-status="ready_to_development" onclick="window.taskDetailManager.jumpToStatus('ready_to_development')" title="Click to jump to this status">
                     <div class="step-indicator"></div>
                     <span class="step-label">Ready to Development</span>
                 </div>
                 <div class="workflow-connector"></div>
                 
-                <div class="workflow-step" data-status="complete_development">
+                <div class="workflow-step clickable-step" data-status="complete_development" onclick="window.taskDetailManager.jumpToStatus('complete_development')" title="Click to jump to this status">
                     <div class="step-indicator"></div>
                     <span class="step-label">Complete Development</span>
                 </div>
                 <div class="workflow-connector"></div>
                 
-                <div class="workflow-step" data-status="ready_to_test">
+                <div class="workflow-step clickable-step" data-status="ready_to_test" onclick="window.taskDetailManager.jumpToStatus('ready_to_test')" title="Click to jump to this status">
                     <div class="step-indicator"></div>
                     <span class="step-label">Ready to Test</span>
                 </div>
                 <div class="workflow-connector"></div>
                 
-                <div class="workflow-step" data-status="test_done">
+                <div class="workflow-step clickable-step" data-status="test_done" onclick="window.taskDetailManager.jumpToStatus('test_done')" title="Click to jump to this status">
                     <div class="step-indicator"></div>
                     <span class="step-label">Test Done</span>
                 </div>
                 <div class="workflow-connector"></div>
                 
-                <div class="workflow-step" data-status="ready_to_production">
+                <div class="workflow-step clickable-step" data-status="ready_to_production" onclick="window.taskDetailManager.jumpToStatus('ready_to_production')" title="Click to jump to this status">
                     <div class="step-indicator"></div>
                     <span class="step-label">Ready to Production</span>
                 </div>
                 <div class="workflow-connector"></div>
                 
-                <div class="workflow-step" data-status="production_done">
+                <div class="workflow-step clickable-step" data-status="production_done" onclick="window.taskDetailManager.jumpToStatus('production_done')" title="Click to jump to this status">
                     <div class="step-indicator"></div>
                     <span class="step-label">Production Done</span>
                 </div>
@@ -108,15 +108,31 @@
 
     <div class="subtasks-section">
         <h2>Subtasks</h2>
-        <div class="subtasks-header">
-            <button class="btn btn-secondary" onclick="window.taskDetailManager.createSubtask()">
-                + Create Subtask
-            </button>
-        </div>
-        
-        <div class="subtasks-list" id="subtasks-list">
-            <div class="empty-subtasks" id="empty-subtasks">
-                <p>No subtasks created yet. Click "Create Subtask" to add one.</p>
+        <div class="task-management">
+            <div class="task-controls">
+                <button type="button" class="btn btn-secondary" onclick="window.subtaskGrid.addNewSubtask()">
+                    + Add Subtask
+                </button>
+                <div class="subtasks-info">
+                    <span id="subtasks-count">0 subtasks</span>
+                    <span class="separator">•</span>
+                    <span class="help-text">Click eye icon to view details</span>
+                </div>
+            </div>
+            
+            <div class="task-grid-container">
+                <div class="task-grid" id="subtasks-task-grid">
+                    <div class="task-grid-header">
+                        <div class="grid-cell">Subtask Name</div>
+                        <div class="grid-cell">Status</div>
+                        <div class="grid-cell">Created</div>
+                        <div class="grid-cell">Description</div>
+                        <div class="grid-cell">Actions</div>
+                    </div>
+                    <div class="task-grid-body" id="subtasks-grid-body">
+                        <!-- Subtasks will be dynamically added here -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -146,28 +162,32 @@
 
 <!-- Create Subtask Modal -->
 <div class="modal" id="create-subtask-modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
+    <div class="modal-content create-subtask-modal-content">
+        <div class="modal-header create-subtask-header">
             <h3>Create New Subtask</h3>
             <button class="close-btn" onclick="window.taskDetailManager.closeModal()">&times;</button>
         </div>
-        <form id="create-subtask-form">
-            <div class="form-group">
-                <label for="subtask-name">Subtask Name *</label>
-                <input type="text" id="subtask-name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="subtask-description">Description</label>
-                <textarea id="subtask-description" name="description" rows="3"></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="window.taskDetailManager.closeModal()">
-                    Cancel
-                </button>
-                <button type="submit" class="btn btn-primary">
-                    Create Subtask
-                </button>
-            </div>
-        </form>
+        <div class="form-section create-subtask-section">
+            <form id="create-subtask-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="subtask-name">Subtask Name</label>
+                        <input type="text" class="form-input" id="subtask-name" name="name" required>
+                    </div>
+                    <div class="form-group form-row">
+                        <label class="form-label" for="subtask-description">Description</label>
+                        <textarea class="form-textarea" id="subtask-description" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="window.taskDetailManager.closeModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Create Subtask
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>

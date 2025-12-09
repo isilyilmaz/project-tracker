@@ -117,48 +117,134 @@ class SubtaskDetailManager {
 
     async handleAddEffort(form) {
         try {
-            const formData = new FormData(form);
-            const hours = parseFloat(formData.get('hours') || 0);
-            const minutes = parseFloat(formData.get('minutes') || 0);
-            const date = formData.get('date');
-            const notes = formData.get('notes')?.trim() || '';
+            const effortInput = this.validateEffortInput(form);
+            if (!effortInput) return;
 
-            if (hours === 0 && minutes === 0) {
-                this.showError('Please enter hours or minutes');
-                return;
-            }
-
-            if (!date) {
-                this.showError('Please select a date');
-                return;
-            }
-
-            const totalHours = hours + (minutes / 60);
+            const effortData = this.createEffortData(effortInput);
+            await this.saveEffort(effortData);
             
-            const effortData = {
-                id: window.idGenerator.generateId('effort'),
-                hours: totalHours,
-                date: date,
-                notes: notes,
-                createdAt: new Date().toISOString()
-            };
-
-            this.currentSubtask.efforts = this.currentSubtask.efforts || [];
-            this.currentSubtask.efforts.push(effortData);
-            this.currentSubtask.updatedAt = new Date().toISOString();
-            
-            await window.dataManager.updateSubtask(this.currentSubtaskId, this.currentSubtask);
-            
-            form.reset();
-            this.setTodaysDate();
-            this.renderEfforts();
-            this.renderSubtaskDetails();
+            this.resetEffortForm(form);
+            this.updateEffortUI();
             this.showSuccess('Effort logged successfully');
             
         } catch (error) {
             console.error('Error adding effort:', error);
             this.showError('Failed to log effort');
         }
+    }
+
+    validateEffortInput(form) {
+        const formData = new FormData(form);
+        const hours = this.parseTimeValue(formData.get('hours'));
+        const minutes = this.parseTimeValue(formData.get('minutes'));
+        const date = formData.get('date');
+        const notes = this.sanitizeEffortNotes(formData.get('notes')?.trim() || '');
+
+        // Validate time input
+        if (!this.isValidTimeInput(hours, minutes)) {
+            this.showError('Please enter valid hours (0-24) or minutes (0-59)');
+            return null;
+        }
+
+        if (hours === 0 && minutes === 0) {
+            this.showError('Please enter hours or minutes');
+            return null;
+        }
+
+        // Validate date
+        if (!date) {
+            this.showError('Please select a date');
+            return null;
+        }
+
+        if (!this.isValidDate(date)) {
+            this.showError('Please select a valid date');
+            return null;
+        }
+
+        // Validate notes length
+        if (notes.length > 500) {
+            this.showError('Notes are too long (maximum 500 characters)');
+            return null;
+        }
+
+        return {
+            hours,
+            minutes,
+            date,
+            notes,
+            totalHours: this.calculateTotalHours(hours, minutes)
+        };
+    }
+
+    parseTimeValue(value) {
+        const parsed = parseFloat(value || 0);
+        return isNaN(parsed) ? 0 : Math.max(0, parsed);
+    }
+
+    isValidTimeInput(hours, minutes) {
+        return hours >= 0 && hours <= 24 && minutes >= 0 && minutes <= 59;
+    }
+
+    isValidDate(dateString) {
+        const date = new Date(dateString);
+        const today = new Date();
+        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+        const oneYearFromNow = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+        
+        return date instanceof Date && !isNaN(date) && 
+               date >= oneYearAgo && date <= oneYearFromNow;
+    }
+
+    calculateTotalHours(hours, minutes) {
+        return hours + (minutes / 60);
+    }
+
+    sanitizeEffortNotes(notes) {
+        // Basic text sanitization
+        return notes
+            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+            .replace(/<[^>]*>/g, '')
+            .trim();
+    }
+
+    createEffortData(effortInput) {
+        return {
+            id: window.idGenerator.generateId('effort'),
+            hours: effortInput.totalHours,
+            date: effortInput.date,
+            notes: effortInput.notes,
+            createdAt: new Date().toISOString()
+        };
+    }
+
+    async saveEffort(effortData) {
+        this.currentSubtask.efforts = this.currentSubtask.efforts || [];
+        this.currentSubtask.efforts.push(effortData);
+        this.currentSubtask.updatedAt = new Date().toISOString();
+        
+        await window.dataManager.updateSubtask(this.currentSubtaskId, this.currentSubtask);
+    }
+
+    resetEffortForm(form) {
+        form.reset();
+        this.setTodaysDate();
+        // Focus on hours input for better UX
+        const hoursInput = form.querySelector('#effort-hours');
+        if (hoursInput) {
+            setTimeout(() => hoursInput.focus(), 100);
+        }
+    }
+
+    updateEffortUI() {
+        this.renderEfforts();
+        this.renderSubtaskDetails();
+    }
+
+    formatTimeDisplay(hours) {
+        const wholeHours = Math.floor(hours);
+        const minutes = Math.round((hours - wholeHours) * 60);
+        return wholeHours > 0 ? `${wholeHours}h ${minutes}m` : `${minutes}m`;
     }
 
     renderEfforts() {
@@ -178,17 +264,13 @@ class SubtaskDetailManager {
         
         // Calculate total effort
         const totalHours = efforts.reduce((sum, effort) => sum + effort.hours, 0);
-        const wholeHours = Math.floor(totalHours);
-        const minutes = Math.round((totalHours - wholeHours) * 60);
-        totalEffortSpan.textContent = `${wholeHours}h ${minutes}m`;
+        totalEffortSpan.textContent = this.formatTimeDisplay(totalHours);
         
         // Render efforts
         const effortsHTML = efforts
             .sort((a, b) => new Date(b.date) - new Date(a.date))
             .map(effort => {
-                const hours = Math.floor(effort.hours);
-                const mins = Math.round((effort.hours - hours) * 60);
-                const timeText = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                const timeText = this.formatTimeDisplay(effort.hours);
                 
                 return `
                     <div class="effort-item" data-effort-id="${effort.id}">
@@ -233,35 +315,75 @@ class SubtaskDetailManager {
 
     async handleAddComment(form) {
         try {
-            const formData = new FormData(form);
-            const text = formData.get('text')?.trim();
+            const commentText = this.validateCommentInput(form);
+            if (!commentText) return;
 
-            if (!text) {
-                this.showError('Please enter a comment');
-                return;
-            }
-
-            const commentData = {
-                id: window.idGenerator.generateId('comment'),
-                text: text,
-                createdAt: new Date().toISOString()
-            };
-
-            this.currentSubtask.comments = this.currentSubtask.comments || [];
-            this.currentSubtask.comments.push(commentData);
-            this.currentSubtask.updatedAt = new Date().toISOString();
+            const commentData = this.createCommentData(commentText);
+            await this.saveComment(commentData);
             
-            await window.dataManager.updateSubtask(this.currentSubtaskId, this.currentSubtask);
-            
-            form.reset();
-            this.renderComments();
-            this.renderSubtaskDetails();
+            this.resetCommentForm(form);
+            this.updateCommentUI();
             this.showSuccess('Comment added successfully');
             
         } catch (error) {
             console.error('Error adding comment:', error);
             this.showError('Failed to add comment');
         }
+    }
+
+    validateCommentInput(form) {
+        const formData = new FormData(form);
+        const text = formData.get('text')?.trim();
+
+        if (!text) {
+            this.showError('Please enter a comment');
+            return null;
+        }
+
+        if (text.length > 1000) {
+            this.showError('Comment is too long (maximum 1000 characters)');
+            return null;
+        }
+
+        return this.sanitizeCommentText(text);
+    }
+
+    sanitizeCommentText(text) {
+        // Basic text sanitization - remove potentially harmful characters
+        return text
+            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+            .replace(/<[^>]*>/g, '')
+            .trim();
+    }
+
+    createCommentData(text) {
+        return {
+            id: window.idGenerator.generateId('comment'),
+            text: text,
+            createdAt: new Date().toISOString()
+        };
+    }
+
+    async saveComment(commentData) {
+        this.currentSubtask.comments = this.currentSubtask.comments || [];
+        this.currentSubtask.comments.push(commentData);
+        this.currentSubtask.updatedAt = new Date().toISOString();
+        
+        await window.dataManager.updateSubtask(this.currentSubtaskId, this.currentSubtask);
+    }
+
+    resetCommentForm(form) {
+        form.reset();
+        // Focus back to comment textarea for better UX
+        const textarea = form.querySelector('textarea');
+        if (textarea) {
+            setTimeout(() => textarea.focus(), 100);
+        }
+    }
+
+    updateCommentUI() {
+        this.renderComments();
+        this.renderSubtaskDetails();
     }
 
     renderComments() {

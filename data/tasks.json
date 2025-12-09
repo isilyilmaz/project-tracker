@@ -3,11 +3,13 @@
     "id": "task_014",
     "name": "gdag",
     "dueDate": "2025-12-20",
-    "doneStatus": "complete_analyze",
+    "doneStatus": "ready_to_development",
     "notes": "gaadeg",
-    "subtaskIds": [],
+    "subtaskIds": [
+      "subtask_003"
+    ],
     "createdAt": "2025-12-06T14:52:59.225Z",
-    "updatedAt": "2025-12-06T17:32:20.819Z"
+    "updatedAt": "2025-12-06T22:19:16.837Z"
   },
   {
     "id": "task_015",
@@ -35,8 +37,10 @@
     "dueDate": "2026-01-01",
     "doneStatus": "ready_to_development",
     "notes": "aegea",
-    "subtaskIds": [],
+    "subtaskIds": [
+      "subtask_004"
+    ],
     "createdAt": "2025-12-06T14:54:22.886Z",
-    "updatedAt": "2025-12-06T14:54:22.886Z"
+    "updatedAt": "2025-12-07T13:02:30.587Z"
   }
 ]

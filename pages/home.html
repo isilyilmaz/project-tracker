@@ -1,5 +1,8 @@
 <div class="home-page">
     <div class="welcome-section">
+        <div class="welcome-logo">
+            <img src="logo.png" alt="Project Tracker" class="welcome-logo-image">
+        </div>
         <h1>Welcome to Project Tracker</h1>
         <p>Organize your projects, ideas, and events all in one place.</p>
     </div>
@@ -25,13 +28,38 @@
 
     <div class="quick-actions">
         <h2>Quick Actions</h2>
-        <div class="action-buttons">
-            <button class="btn" onclick="window.navigateToPage('create-project')">
-                Create New Project
-            </button>
-            <button class="btn btn-secondary" onclick="window.navigateToPage('all-projects')">
-                View All Projects
-            </button>
+        <div class="action-cards-grid">
+            <div class="action-card" onclick="window.navigateToPage('all-projects')">
+                <div class="action-icon">🗂️</div>
+                <div class="action-content">
+                    <h3>All Projects</h3>
+                    <p>View and manage all your projects</p>
+                </div>
+            </div>
+            
+            <div class="action-card" onclick="window.navigateToPage('all-ideas')">
+                <div class="action-icon">💡</div>
+                <div class="action-content">
+                    <h3>All Ideas</h3>
+                    <p>Explore and organize your ideas</p>
+                </div>
+            </div>
+            
+            <div class="action-card" onclick="window.navigateToPage('all-events')">
+                <div class="action-icon">📅</div>
+                <div class="action-content">
+                    <h3>All Events</h3>
+                    <p>Manage events and schedules</p>
+                </div>
+            </div>
+            
+            <div class="action-card" onclick="window.navigateToPage('task-manager')">
+                <div class="action-icon">✅</div>
+                <div class="action-content">
+                    <h3>Task Manager</h3>
+                    <p>Track and complete tasks</p>
+                </div>
+            </div>
         </div>
     </div>
 

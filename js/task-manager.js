@@ -422,6 +422,17 @@ class TaskManager {
         this.render();
     }
 
+    toggleView() {
+        const newView = this.currentView === 'grid' ? 'list' : 'grid';
+        this.setView(newView);
+        
+        // Update toggle button appearance if it exists
+        const toggleButton = document.querySelector('.view-toggle-btn');
+        if (toggleButton) {
+            toggleButton.textContent = this.currentView === 'grid' ? '📋 List View' : '🔲 Grid View';
+        }
+    }
+
     async editSubtask(subtaskId) {
         try {
             const subtask = await window.dataManager.getSubtask(subtaskId);

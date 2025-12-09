@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Tracker</title>
+    <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/home.css">
     <link rel="stylesheet" href="css/all-projects.css">
@@ -22,7 +23,9 @@
 <body>
     <header class="main-header">
         <div class="container">
-            <h1 class="logo">Project Tracker</h1>
+            <div class="logo">
+                <img src="logo.png" alt="Project Tracker" class="logo-image">
+            </div>
             <nav class="main-nav">
                 <ul class="nav-list">
                     <li class="nav-item">
@@ -55,7 +58,35 @@
 
     <footer class="main-footer">
         <div class="container">
-            <p>&copy; 2025 Project Tracker. All rights reserved.</p>
+            <div class="footer-content">
+                <div class="footer-section footer-about">
+                    <div class="footer-logo">
+                        <img src="logo.png" alt="Project Tracker" class="footer-logo-image">
+                    </div>
+                    <h4>Project Tracker</h4>
+                    <p>Organize your projects, ideas, and events efficiently in one place.</p>
+                </div>
+                
+                <div class="footer-section footer-links">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-nav">
+                        <li><a href="#" onclick="window.navigateToPage('all-projects')">All Projects</a></li>
+                        <li><a href="#" onclick="window.navigateToPage('all-ideas')">All Ideas</a></li>
+                        <li><a href="#" onclick="window.navigateToPage('all-events')">All Events</a></li>
+                        <li><a href="#" onclick="window.navigateToPage('task-manager')">Task Manager</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section footer-info">
+                    <h4>Information</h4>
+                    <p>Version 1.0.0</p>
+                    <p>Built with ❤️ for productivity</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Project Tracker. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 
